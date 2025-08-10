@@ -1,6 +1,6 @@
 <script lang="ts">
     import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
-    import {loginFinish, loginStart, registerFinish, registerStart} from "../services/api-endpoints";
+    import {ApiEndpoints} from "../services/api-endpoints";
     let username: string = '';
     let message: string = '';
     let isError: boolean = false;
@@ -14,7 +14,7 @@
     async function register() {
         try {
             // inscription server side
-            const response = await fetch(registerStart, {
+            const response = await fetch(ApiEndpoints.passkey.registerStart(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json'},
                 body: JSON.stringify({username})
@@ -28,7 +28,7 @@
             const attestationResponse = await startRegistration(options.publicKey); //passkey modal
 
             // validation server side
-            const verificationResponse = await fetch(registerFinish, {
+            const verificationResponse = await fetch(ApiEndpoints.passkey.registerFinish(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json'},
                 body: JSON.stringify(attestationResponse)
@@ -43,7 +43,7 @@
 
     async function login() {
         try {
-            const response = await fetch(loginStart, {
+            const response = await fetch(ApiEndpoints.passkey.loginStart(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json'},
                 body: JSON.stringify({username})
@@ -56,7 +56,7 @@
 
             const assertionResponse = await startAuthentication(options.publicKey);
 
-            const verificationResponse = await fetch(loginFinish, {
+            const verificationResponse = await fetch(ApiEndpoints.passkey.loginFinish(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json'},
                 body: JSON.stringify(assertionResponse)
@@ -77,7 +77,7 @@
             <p class="py-6">
                 Connect you without email and password, insane non?
             </p>
-            <a href="/private">TEST</a>
+            <a href="http://localhost:8080/private">TEST</a> <!--func test-->
         </div>
         <div class="card bg-base-100 w-full max-w-sm shrink-0 shadow-2xl">
             <div class="card-body">
