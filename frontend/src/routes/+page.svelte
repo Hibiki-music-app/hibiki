@@ -1,6 +1,6 @@
 <script lang="ts">
     import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
-    import {ApiEndpoints} from "../services/api-endpoints";
+    import {ApiEndpoints} from "$lib/services/api-endpoints";
     let username: string = '';
     let message: string = '';
     let isError: boolean = false;

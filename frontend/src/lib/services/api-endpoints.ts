@@ -1,6 +1,8 @@
 
 const API_URL: string = 'http://localhost:8080/api/'; // keep this in .env?
 
+export const API_EXTERNE: string = 'https://dab.yeet.su/api'; // move to backend
+
 const url = (path: string) => `${API_URL}${path}`;
 
 export const ApiEndpoints = {

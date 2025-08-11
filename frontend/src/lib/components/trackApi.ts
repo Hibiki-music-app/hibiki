@@ -1,59 +1,14 @@
-const API_BASE = 'https://dab.yeet.su/api';
+import type { Track } from '$lib/models/track';
+import type { SearchResponse } from '$lib/models/search';
+import { API_EXTERNE } from '$lib/services/api-endpoints';
 
-interface AudioQuality {
-	maximumBitDepth: number;
-	maximumSamplingRate: number;
-	isHiRes: boolean;
-}
-
-interface Images {
-	small: string;
-	thumbnail: string;
-	large: string;
-	back?: string | null;
-}
-
-export interface Track {
-	id: number;
-	title: string;
-	artist: string;
-	artistId: number;
-	albumTitle: string;
-	albumCover: string;
-	albumId: string;
-	releaseDate: string;
-	genre: string;
-	duration: number;
-	audioQuality: AudioQuality;
-	version: string | null;
-	label: string;
-	labelId: number;
-	upc: string;
-	mediaCount: number;
-	parental_warning: boolean;
-	streamable: boolean;
-	purchasable: boolean;
-	previewable: boolean;
-	genreId: number;
-	genreSlug: string;
-	genreColor: string;
-	releaseDateStream: string;
-	releaseDateDownload: string;
-	maximumChannelCount: number;
-	images: Images;
-	isrc: string;
-}
-
-interface SearchResponse {
-	tracks: Track[];
-}
 
 export async function searchTracks(query: string): Promise<Track[]> {
 	if (!query) return [];
 
 	try {
 		const response = await fetch(
-			`${API_BASE}/search?q=${encodeURIComponent(query)}&type=track&limit=10`
+			`${API_EXTERNE}/search?q=${encodeURIComponent(query)}&type=track&limit=10`
 		);
 		const data: SearchResponse = await response.json();
 
@@ -95,7 +50,7 @@ export async function searchTracks(query: string): Promise<Track[]> {
 
 export async function getTrackUrl(trackId: number): Promise<string> {
 	try {
-		const response = await fetch(`${API_BASE}/stream?trackId=${trackId}&quality=27`);
+		const response = await fetch(`${API_EXTERNE}/stream?trackId=${trackId}&quality=27`);
 		if (!response.ok) {
 			throw new Error('Erreur lors de la lecture de la piste');
 		}

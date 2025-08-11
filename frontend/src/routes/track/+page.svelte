@@ -1,6 +1,6 @@
 <script lang="ts">
-	import * as api from '$lib/api';
-	import type { Track } from '$lib/api';
+	import * as api from '$lib/components/trackApi';
+	import type { Track } from '$lib/components/trackApi';
 
 	// recherche
 	let searchQuery = $state('');
