@@ -17,7 +17,8 @@
             const response = await fetch(ApiEndpoints.passkey.registerStart(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json'},
-                body: JSON.stringify({username})
+                body: JSON.stringify({username}),
+                credentials: "include"
             });
             if (!response.ok) {
                 const msg = await response.json();
@@ -31,7 +32,8 @@
             const verificationResponse = await fetch(ApiEndpoints.passkey.registerFinish(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json'},
-                body: JSON.stringify(attestationResponse)
+                body: JSON.stringify(attestationResponse),
+                credentials: "include"
             });
 
             const msg = await verificationResponse.json();
@@ -46,7 +48,8 @@
             const response = await fetch(ApiEndpoints.passkey.loginStart(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json'},
-                body: JSON.stringify({username})
+                body: JSON.stringify({username}),
+                credentials: "include"
             });
             if (!response.ok) {
                 const msg = await response.json()
@@ -59,7 +62,8 @@
             const verificationResponse = await fetch(ApiEndpoints.passkey.loginFinish(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json'},
-                body: JSON.stringify(assertionResponse)
+                body: JSON.stringify(assertionResponse),
+                credentials: "include"
             });
             const msg = await verificationResponse.json();
             showMessage(msg, !verificationResponse.ok);
