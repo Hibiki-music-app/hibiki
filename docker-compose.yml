@@ -6,8 +6,8 @@ services:
     restart: always
     shm_size: 128mb # default is 64mb -> upgrade to 128mb for postgres (docs)
     environment:
-      POSTGRES_USER: example_user
-      POSTGRES_PASSWORD: example_passwd
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
       POSTGRES_DB: hibikidb
     ports:
       - "5432:5432"
