@@ -45,7 +45,7 @@
 <div class="min-h-screen bg-base-200">
 	<!-- Hero Section -->
 	<div class="hero min-h-[25vh] flex flex-col justify-end pb-8">
-		<h1 class="text-5xl font-bold text-primary-content">On écoute quoi ?</h1>
+		<h1 class="text-4xl font-bold">On écoute quoi ?</h1>
 	</div>
 
 	<!-- Barre de recherche -->
@@ -91,16 +91,10 @@
 		<!-- Résultats de recherche -->
 		{#if searchResults.length > 0}
 			<div class="mb-8">
-				<div class="text-center mb-8">
-					<h3 class="text-2xl font-bold text-base-content">
-						Résultats pour <span class="text-primary">"{searchQuery}"</span>
-					</h3>
-					<div class="badge badge-primary badge-lg mt-2">
-						{searchResults.length} résultat{searchResults.length > 1 ? 's' : ''}
-					</div>
-				</div>
 				<ul class="list bg-base-100 rounded-box shadow-md">
-					<li class="p-4 pb-2 text-xs opacity-60 tracking-wide">Résultats de recherche</li>
+					<li class="p-4 pb-2 text-xs opacity-60 tracking-wide">
+						{searchResults.length} résultat{searchResults.length > 1 ? 's' : ''} pour "{searchQuery}"
+					</li>
 					{#each searchResults as track}
 						<li class="list-row">
 							<div>
