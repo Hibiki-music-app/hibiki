@@ -1,7 +1,8 @@
-package main
+package repository
 
 import (
 	"crypto/rand"
+	"database/sql"
 	"encoding/base64"
 
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -56,7 +57,7 @@ func (i *InMem) GetOrCreateUser(userName string) PasskeyUser {
 	i.log.Printf("[DEBUG] GetOrCreateUser: %v", userName)
 	if _, ok := i.users[userName]; !ok {
 		i.log.Printf("[DEBUG] GetOrCreateUser: creating new user: %v", userName)
-		i.users[userName] = &User{
+		i.users[userName] = &main.User{
 			ID:          []byte(userName),
 			DisplayName: userName,
 			Name:        userName,
