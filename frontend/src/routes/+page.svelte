@@ -14,7 +14,8 @@
 	let currentTrack: Track | null = $state(null);
 	let audioElement: HTMLAudioElement | null = $state(null);
 	let isPlaying = $state(false);
-	let player: Player;
+	let playerPlayTrack: ((track: Track) => Promise<void>) | undefined = $state();
+	let playerTogglePlayPause: (() => void) | undefined = $state();
 
 	function searchTracks() {
 		isLoading = true;
@@ -36,8 +37,8 @@
 	}
 
 	async function playTrack(track: Track) {
-		if (player) {
-			await player.playTrack(track);
+		if (playerPlayTrack) {
+			await playerPlayTrack(track);
 		}
 	}
 </script>
@@ -161,7 +162,13 @@
 	</div>
 
 	<!-- Player component -->
-	<Player bind:this={player} bind:currentTrack bind:isPlaying bind:audioElement />
+	<Player 
+		bind:currentTrack 
+		bind:isPlaying 
+		bind:audioElement 
+		bind:playTrack={playerPlayTrack}
+		bind:togglePlayPause={playerTogglePlayPause}
+	/>
 </div>
 
 <style>
