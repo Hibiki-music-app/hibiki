@@ -15,21 +15,19 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<Header onHomeClick={handleHomeClick} />
-
-<main class="main-layout">
-	{@render children?.()}
-</main>
+<!-- DaisyUI Layout with Header -->
+<div class="min-h-screen bg-base-200">
+	<Header onHomeClick={handleHomeClick} />
+	
+	<main>
+		{@render children?.()}
+	</main>
+</div>
 
 <style>
+	/* DaisyUI global overrides - minimisés */
 	:global(body) {
 		margin: 0;
 		padding: 0;
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-		background-color: #fafafa;
-	}
-
-	.main-layout {
-		position: relative;
 	}
 </style>
