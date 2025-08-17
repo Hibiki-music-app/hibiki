@@ -1,14 +1,44 @@
 <script lang="ts">
 	import favicon from '$lib/assets/favicon.svg';
-	import "../app.css";
+	import '../app.css';
 	import Header from '../components/Header.svelte';
+	import Player from '../components/Player.svelte';
+	import Queue from '../components/Queue.svelte';
+	import type { Track } from '$lib/api';
+	import { setContext } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	let { children } = $props();
 
 	function handleHomeClick() {
-		// Navigation vers la page d'accueil
-		window.location.href = '/';
+		goto('/');
 	}
+
+	// État global du player
+	let currentTrack: Track | null = $state(null);
+	let audioElement: HTMLAudioElement | null = $state(null);
+	let isPlaying = $state(false);
+	let showQueue = $state(false);
+	let playerPlayTrack: ((track: Track) => Promise<void>) | undefined = $state();
+	let playerTogglePlayPause: (() => void) | undefined = $state();
+
+	// Contexte réactif pour les pages enfants
+	const playerContext = {
+		get currentTrack() {
+			return currentTrack;
+		},
+		get isPlaying() {
+			return isPlaying;
+		},
+		get playTrack() {
+			return playerPlayTrack;
+		},
+		get togglePlayPause() {
+			return playerTogglePlayPause;
+		}
+	};
+
+	setContext('player', playerContext);
 </script>
 
 <svelte:head>
@@ -18,10 +48,24 @@
 <!-- DaisyUI Layout with Header -->
 <div class="min-h-screen bg-base-200">
 	<Header onHomeClick={handleHomeClick} />
-	
+
 	<main>
 		{@render children?.()}
 	</main>
+
+	<Player
+		bind:currentTrack
+		bind:isPlaying
+		bind:audioElement
+		bind:playTrack={playerPlayTrack}
+		bind:togglePlayPause={playerTogglePlayPause}
+		bind:showQueue
+	/>
+
+	<Queue
+		bind:show={showQueue}
+		playTrack={playerPlayTrack}
+	/>
 </div>
 
 <style>

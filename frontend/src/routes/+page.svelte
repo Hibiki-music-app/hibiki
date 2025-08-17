@@ -1,21 +1,23 @@
 <script lang="ts">
 	import * as api from '$lib/api';
 	import type { Track } from '$lib/api';
+	import { queueStore } from '$lib/stores/playerStore';
 	import SearchBar from '../components/SearchBar.svelte';
-	import Player from '../components/Player.svelte';
+	import { getContext } from 'svelte';
+
+	// Récupérer le contexte du player depuis le layout
+	const playerContext = getContext('player') as {
+		currentTrack: Track | null;
+		isPlaying: boolean;
+		playTrack?: (track: Track) => Promise<void>;
+		togglePlayPause?: () => void;
+	};
 
 	// recherche
 	let searchQuery = $state('');
 	let isLoading = $state(false);
 	let searchResults: Track[] = $state([]);
 	let hasSearched = $state(false);
-
-	// player
-	let currentTrack: Track | null = $state(null);
-	let audioElement: HTMLAudioElement | null = $state(null);
-	let isPlaying = $state(false);
-	let playerPlayTrack: ((track: Track) => Promise<void>) | undefined = $state();
-	let playerTogglePlayPause: (() => void) | undefined = $state();
 
 	function searchTracks() {
 		isLoading = true;
@@ -37,13 +39,35 @@
 	}
 
 	async function playTrack(track: Track) {
-		if (playerPlayTrack) {
-			await playerPlayTrack(track);
+		if (playerContext.playTrack) {
+			await playerContext.playTrack(track);
 		}
+	}
+
+	// Nouvelles fonctions pour la queue
+	function addToQueue(track: Track) {
+		queueStore.addTrack(track);
+		// Afficher une notification ou toast ici si souhaité
+	}
+
+	function playNext(track: Track) {
+		queueStore.playNext(track);
+		// Afficher une notification ou toast ici si souhaité
+	}
+
+	// État pour gérer les menus contextuels
+	let activeMenuTrackId: number | null = $state(null);
+
+	function toggleMenu(trackId: number) {
+		activeMenuTrackId = activeMenuTrackId === trackId ? null : trackId;
+	}
+
+	function closeMenu() {
+		activeMenuTrackId = null;
 	}
 </script>
 
-<div class="min-h-screen bg-base-200">
+<div class="min-h-screen bg-base-200" onclick={closeMenu} onkeydown={(e) => e.key === 'Escape' && closeMenu()} role="button" tabindex="0">
 	<!-- Hero Section -->
 	<div class="hero min-h-[25vh] flex flex-col justify-end pb-8">
 		<h1 class="text-4xl font-bold">On écoute quoi ?</h1>
@@ -97,7 +121,7 @@
 						{searchResults.length} résultat{searchResults.length > 1 ? 's' : ''} pour "{searchQuery}"
 					</li>
 					{#each searchResults as track}
-						<li class="list-row">
+						<li class="list-row relative">
 							<div>
 								{#if track.albumCover}
 									<img class="size-10 rounded-box" src={track.albumCover} alt={track.albumTitle} />
@@ -109,38 +133,87 @@
 									</div>
 								{/if}
 							</div>
-							<div>
+							<div class="flex-1">
 								<div>{track.title}</div>
 								<div class="text-xs uppercase font-semibold opacity-60">{track.artist}</div>
 							</div>
-							<button
-								onclick={() => playTrack(track)}
-								class="btn btn-square btn-ghost"
-								class:text-success={currentTrack?.id === track.id && isPlaying}
-								disabled={isLoading}
-							>
-								{#if currentTrack?.id === track.id && isPlaying}
-									<svg
-										class="size-[1.2em]"
-										xmlns="http://www.w3.org/2000/svg"
-										viewBox="0 0 24 24"
-										fill="currentColor"
+
+							<!-- Actions -->
+							<div class="flex items-center gap-1">
+								<!-- Bouton play principal -->
+								<button
+									onclick={() => playTrack(track)}
+									class="btn btn-square btn-ghost"
+									class:text-success={playerContext.currentTrack?.id === track.id &&
+										playerContext.isPlaying}
+									disabled={isLoading}
+									aria-label="Jouer"
+								>
+									{#if playerContext.currentTrack?.id === track.id && playerContext.isPlaying}
+										<svg
+											class="size-[1.2em]"
+											xmlns="http://www.w3.org/2000/svg"
+											viewBox="0 0 24 24"
+											fill="currentColor"
+										>
+											<rect x="6" y="4" width="4" height="16" />
+											<rect x="14" y="4" width="4" height="16" />
+										</svg>
+									{:else}
+										<svg class="size-[1.2em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+											><g
+												stroke-linejoin="round"
+												stroke-linecap="round"
+												stroke-width="2"
+												fill="none"
+												stroke="currentColor"><path d="M6 3L20 12 6 21 6 3z"></path></g
+											></svg
+										>
+									{/if}
+								</button>
+
+								<!-- Bouton menu options -->
+								<div class="dropdown dropdown-end">
+									<button
+										onclick={() => toggleMenu(track.id)}
+										class="btn btn-square btn-ghost btn-sm"
+										aria-label="Plus d'options"
 									>
-										<rect x="6" y="4" width="4" height="16" />
-										<rect x="14" y="4" width="4" height="16" />
-									</svg>
-								{:else}
-									<svg class="size-[1.2em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-										><g
-											stroke-linejoin="round"
-											stroke-linecap="round"
-											stroke-width="2"
-											fill="none"
-											stroke="currentColor"><path d="M6 3L20 12 6 21 6 3z"></path></g
-										></svg
-									>
-								{/if}
-							</button>
+										<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+											<path d="M12,16A2,2 0 0,1 14,18A2,2 0 0,1 12,20A2,2 0 0,1 10,18A2,2 0 0,1 12,16M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4Z"/>
+										</svg>
+									</button>
+
+									{#if activeMenuTrackId === track.id}
+										<ul class="dropdown-content menu bg-base-100 rounded-box z-10 w-52 p-2 shadow-lg">
+											<li>
+												<button onclick={() => { playTrack(track); closeMenu(); }} class="flex items-center gap-2">
+													<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+														<polygon points="5,3 19,12 5,21" />
+													</svg>
+													Jouer maintenant
+												</button>
+											</li>
+											<li>
+												<button onclick={() => { playNext(track); closeMenu(); }} class="flex items-center gap-2">
+													<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+														<path d="M8,5V19L19,12M6,5V19L17,12"/>
+													</svg>
+													Jouer ensuite
+												</button>
+											</li>
+											<li>
+												<button onclick={() => { addToQueue(track); closeMenu(); }} class="flex items-center gap-2">
+													<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+														<path d="M15,6H3V8H15V6M15,10H3V12H15V10M3,16H11V14H3V16M17,6V14.18C16.69,14.07 16.35,14 16,14A3,3 0 0,0 13,17A3,3 0 0,0 16,20A3,3 0 0,0 19,17V8H22V6H17Z"/>
+													</svg>
+													Ajouter à la file d'attente
+												</button>
+											</li>
+										</ul>
+									{/if}
+								</div>
+							</div>
 						</li>
 					{/each}
 				</ul>
@@ -160,15 +233,6 @@
 			</div>
 		{/if}
 	</div>
-
-	<!-- Player component -->
-	<Player 
-		bind:currentTrack 
-		bind:isPlaying 
-		bind:audioElement 
-		bind:playTrack={playerPlayTrack}
-		bind:togglePlayPause={playerTogglePlayPause}
-	/>
 </div>
 
 <style>
