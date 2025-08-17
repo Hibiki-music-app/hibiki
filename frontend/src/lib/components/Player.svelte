@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Track } from '$lib/api';
-	import * as api from '$lib/api';
+	import type { Track } from '$lib/components/SearchTracks';
+	import * as api from '$lib/components/SearchTracks';
 	import {
 		queueStore,
 		currentTrack as queueCurrentTrack,

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import * as api from '$lib/api';
-	import type { Track } from '$lib/api';
+	import * as api from '$lib/components/SearchTracks';
+	import type { Track } from '$lib/components/SearchTracks';
 	import { queueStore } from '$lib/stores/playerStore';
-	import SearchBar from '../components/SearchBar.svelte';
+	import SearchBar from '$lib/components/SearchBar.svelte';
 	import { getContext } from 'svelte';
 
 	// Récupérer le contexte du player depuis le layout

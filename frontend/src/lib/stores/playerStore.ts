@@ -1,5 +1,5 @@
 import { writable, derived } from 'svelte/store';
-import type { Track } from '$lib/api';
+import type { Track } from '$lib/components/SearchTracks';
 
 export interface QueueItem {
 	track: Track;

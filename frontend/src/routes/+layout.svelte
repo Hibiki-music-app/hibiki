@@ -1,10 +1,10 @@
 <script lang="ts">
 	import favicon from '$lib/assets/favicon.svg';
 	import '../app.css';
-	import Header from '../components/Header.svelte';
-	import Player from '../components/Player.svelte';
-	import Queue from '../components/Queue.svelte';
-	import type { Track } from '$lib/api';
+	import Header from '$lib/components/Header.svelte';
+	import Player from '$lib/components/Player.svelte';
+	import Queue from '$lib/components/Queue.svelte';
+	import type { Track } from '$lib/components/SearchTracks';
 	import { setContext } from 'svelte';
 	import { goto } from '$app/navigation';
 
