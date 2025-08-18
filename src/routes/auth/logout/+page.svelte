@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {authClient} from "$lib/auth-client";
+    import {authClient} from "$lib/client";
     import {onMount} from "svelte";
 
     const {data}: {data: {user: import("better-auth").User | null}}= $props();
@@ -22,7 +22,7 @@
                 }
             });
         }}>
-            Se déconnecter
+            logout
         </button>
     </div>
 
