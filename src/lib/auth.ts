@@ -5,6 +5,12 @@ import { db } from '../index';
 
 // better Auth instance & pluggins
 export const auth = betterAuth({
+	account: {
+		accountLinking: {
+			enabled: true,
+			trustedProviders: ['google'],
+		}
+	},
 	database: drizzleAdapter(db, {
 		provider: "pg"
 	}),
@@ -13,9 +19,9 @@ export const auth = betterAuth({
 		autoSignIn: false,
 	},
 	socialProviders: {
-		github: {
-			clientId: process.env.GITHUB_CLIENT_ID as string,
-			clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
-		}},
-
+		google: {
+			clientId: process.env.GOOGLE_CLIENT_ID as string,
+			clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+		}
+	}
 	});
