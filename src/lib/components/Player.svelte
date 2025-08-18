@@ -240,6 +240,7 @@
 						class="btn btn-ghost btn-square btn-sm"
 						disabled={!$hasPrevious}
 						class:opacity-50={!$hasPrevious}
+                        aria-label="Piste précédente"
 					>
 						<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
 							<path d="M6 6h2v12H6zm3.5 6l8.5 6V6l-8.5 6z" />
@@ -266,6 +267,7 @@
 						class="btn btn-ghost btn-square btn-sm"
 						disabled={!$hasNext}
 						class:opacity-50={!$hasNext}
+                        aria-label="Piste suivante"
 					>
 						<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
 							<path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
@@ -278,6 +280,7 @@
 					onclick={toggleQueue}
 					class="btn btn-ghost btn-square btn-sm"
 					class:text-primary={showQueue}
+                    aria-label="Queue"
 				>
 					<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
 						<path
