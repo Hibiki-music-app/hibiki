@@ -1,6 +1,6 @@
 <script lang="ts">
-    import {authClient} from "$lib/auth-client";
     import {goto} from "$app/navigation";
+    import {authClient} from "$lib/client";
     let email = "", password = "", name = "";
     let message = "", isError = false;
 

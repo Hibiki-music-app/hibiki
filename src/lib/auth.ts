@@ -1,7 +1,9 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from '../index';
-
+import { sveltekitCookies } from 'better-auth/svelte-kit';
+import { getRequestEvent } from '$app/server';
+import { user, account, session, verification } from '$lib/db/schema';
 
 // better Auth instance & pluggins
 export const auth = betterAuth({
@@ -12,7 +14,8 @@ export const auth = betterAuth({
 		}
 	},
 	database: drizzleAdapter(db, {
-		provider: "pg"
+		provider: "pg",
+		schema: {user, account, session, verification}
 	}),
   emailAndPassword: {
 		enabled: true,
@@ -23,5 +26,6 @@ export const auth = betterAuth({
 			clientId: process.env.GOOGLE_CLIENT_ID as string,
 			clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
 		}
-	}
+	},
+	plugins: [sveltekitCookies(getRequestEvent)], // put in last
 	});
