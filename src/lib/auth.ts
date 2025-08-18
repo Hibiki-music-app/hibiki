@@ -3,8 +3,19 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from '../index';
 
 
-// better Auth instance
+// better Auth instance & pluggins
 export const auth = betterAuth({
-	database: drizzleAdapter(db, { provider: "pg", }),
-    emailAndPassword: {enabled: true},
-});
+	database: drizzleAdapter(db, {
+		provider: "pg"
+	}),
+  emailAndPassword: {
+		enabled: true,
+		autoSignIn: false,
+	},
+	socialProviders: {
+		github: {
+			clientId: process.env.GITHUB_CLIENT_ID as string,
+			clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+		}},
+
+	});
