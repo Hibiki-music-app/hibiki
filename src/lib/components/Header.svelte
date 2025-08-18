@@ -82,7 +82,7 @@
 				</a>
 			</li>
 			<li><a href="/settings">Paramètres</a></li>
-			<li><a href="/logout">Déconnexion</a></li>
+			<li><a href="/auth/logout">Déconnexion</a></li>
 			<li>
 				<div class="flex items-center justify-between p-2">
 					<span class="text-sm font-medium">Thème</span>
