@@ -5,7 +5,9 @@
 		queueStore,
 		currentTrack as queueCurrentTrack,
 		hasNext,
-		hasPrevious
+		hasPrevious,
+		volume as storeVolume,
+		isMuted
 	} from '$lib/stores/playerStore';
 
 	let {
@@ -28,60 +30,84 @@
 	let currentTime = $state(0);
 	let duration = $state(0);
 	let isDragging: boolean = $state(false);
-	let volume: number = $state(50);
 	let showVolumeSlider: boolean = $state(false);
 
-	// Synchroniser avec le store de queue
+	// Fonction pour charger une nouvelle piste
+	async function loadTrack(track: Track) {
+		if (!audioElement) return;
+
+		try {
+			const url = await api.getMusicUrl(track.id);
+			console.log('Setting audio source:', url);
+			audioElement.src = url;
+		} catch (error) {
+			console.error('Error loading music URL:', error);
+		}
+	}
+
+	// Fonction pour reprendre la lecture après le chargement
+	async function resumePlaybackIfNeeded(): Promise<void> {
+		if (!audioElement || !isPlaying) return;
+
+		try {
+			await audioElement.play();
+		} catch (error) {
+			console.error('Error playing audio:', error);
+			isPlaying = false;
+		}
+	}
+
+	// Effect pour gérer les changements de piste
 	$effect(() => {
-		currentTrack = $queueCurrentTrack;
-		if (audioElement && $queueCurrentTrack) {
-			api
-				.getMusicUrl($queueCurrentTrack.id)
-				.then((url) => {
-					if (audioElement) {
-						console.log('Setting audio source:', url);
-						audioElement.src = url;
-						audioElement.volume = volume / 100;
-						// Si on était en train de jouer, reprendre la lecture
-						if (isPlaying) {
-							audioElement.play().catch((error) => {
-								console.error('Error playing audio:', error);
-								isPlaying = false;
-							});
-						}
-					}
-				})
-				.catch((error) => {
-					console.error('Error loading music URL:', error);
-				});
+		const newTrack = $queueCurrentTrack;
+
+		if (newTrack?.id !== currentTrack?.id) {
+			currentTrack = newTrack;
+			if (audioElement) {
+				if (newTrack) {
+					loadTrack(newTrack).then(() => {
+						resumePlaybackIfNeeded();
+					});
+				} else {
+					audioElement.src = '';
+					audioElement.currentTime = 0;
+					isPlaying = false;
+				}
+			}
 		}
 	});
 
-	async function handlePlayTrack(track: Track) {
+	$effect(() => {
+		if (audioElement) {
+			audioElement.volume = $storeVolume;
+		}
+	});
+
+	async function handlePlayTrack(track: Track): Promise<void> {
 		if (currentTrack?.id === track.id && isPlaying) {
 			handleTogglePlayPause();
 			return;
 		}
 
-		// Utiliser le store de queue pour jouer la piste
 		queueStore.playTrack(track);
-
-		// La piste sera automatiquement mise à jour via l'effect
-		if (audioElement && track) {
-			isPlaying = true;
-			audioElement.volume = volume / 100;
-		}
+		isPlaying = true;
 	}
 
-	function handleTogglePlayPause() {
+	function handleTogglePlayPause(): void {
 		if (!audioElement) return;
 
 		if (isPlaying) {
 			audioElement.pause();
 			isPlaying = false;
 		} else {
-			audioElement.play();
-			isPlaying = true;
+			audioElement.play()
+				.then(() => {
+					isPlaying = true;
+				})
+				.catch(error => {
+					console.error('Error playing audio:', error);
+					isPlaying = false;
+				});
 		}
 	}
 
@@ -116,38 +142,43 @@
 	togglePlayPause = handleTogglePlayPause;
 
 	// Fonctions pour gérer la progression temporelle
-	function handleTimeUpdate() {
+	function handleTimeUpdate(): void {
 		if (!isDragging && audioElement) {
 			currentTime = audioElement.currentTime;
 		}
 	}
 
-	function handleVolumeChange(event: Event) {
+	function handleVolumeChange(event: Event): void {
 		const target = event.target as HTMLInputElement;
-		volume = parseFloat(target.value);
-		if (audioElement) {
-			audioElement.volume = volume / 100; // Convertir en 0-1
-		}
+		const volumeValue = parseFloat(target.value) / 100;
+		queueStore.setVolume(volumeValue);
 	}
 
-	function toggleVolumeSlider() {
+	function toggleVolumeSlider(): void {
 		showVolumeSlider = !showVolumeSlider;
 	}
 
-	function handleLoadedMetadata() {
+	function handleLoadedMetadata(): void {
 		if (audioElement) {
 			duration = audioElement.duration;
-			audioElement.volume = volume / 100; // Convertir en 0-1
 		}
 	}
 
-	function handleSeek(event: Event) {
+	function handleSeek(event: Event): void {
 		if (audioElement) {
 			const target = event.target as HTMLInputElement;
 			const time = (parseFloat(target.value) / 100) * duration;
 			audioElement.currentTime = time;
 			currentTime = time;
 		}
+	}
+
+	function handleSeekStart(): void {
+		isDragging = true;
+	}
+
+	function handleSeekEnd(): void {
+		isDragging = false;
 	}
 
 	function formatTime(seconds: number): string {
@@ -173,10 +204,10 @@
 					value={duration > 0 ? (currentTime / duration) * 100 : 0}
 					class="range range-xs flex-1"
 					oninput={handleSeek}
-					onmousedown={() => (isDragging = true)}
-					onmouseup={() => (isDragging = false)}
-					ontouchstart={() => (isDragging = true)}
-					ontouchend={() => (isDragging = false)}
+					onmousedown={handleSeekStart}
+					onmouseup={handleSeekEnd}
+					ontouchstart={handleSeekStart}
+					ontouchend={handleSeekEnd}
 				/>
 				<span class="text-xs opacity-60 min-w-[2.5rem]">
 					{formatTime(duration)}
@@ -204,14 +235,14 @@
 
 				<!-- Volume control -->
 				<div class="relative">
-					<button onclick={toggleVolumeSlider} class="btn btn-ghost btn-square btn-sm">
-						{#if volume === 0}
+					<button onclick={toggleVolumeSlider} class="btn btn-ghost btn-square btn-sm" aria-label="Volume">
+						{#if $isMuted}
 							<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
 								<path
 									d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"
 								/>
 							</svg>
-						{:else if volume < 50}
+						{:else if $storeVolume < 0.5}
 							<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
 								<path
 									d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"
@@ -233,7 +264,7 @@
 								type="range"
 								min="0"
 								max="100"
-								value={volume}
+								value={$storeVolume * 100}
 								class="range range-xs w-20"
 								oninput={handleVolumeChange}
 							/>
@@ -249,6 +280,7 @@
 						class="btn btn-ghost btn-square btn-sm"
 						disabled={!$hasPrevious}
 						class:opacity-50={!$hasPrevious}
+						aria-label="Piste précédente"
 					>
 						<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
 							<path d="M6 6h2v12H6zm3.5 6l8.5 6V6l-8.5 6z" />
@@ -275,6 +307,7 @@
 						class="btn btn-ghost btn-square btn-sm"
 						disabled={!$hasNext}
 						class:opacity-50={!$hasNext}
+						aria-label="Piste suivante"
 					>
 						<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
 							<path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
@@ -287,6 +320,7 @@
 					onclick={toggleQueue}
 					class="btn btn-ghost btn-square btn-sm"
 					class:text-primary={showQueue}
+					aria-label="File d'attente"
 				>
 					<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
 						<path
