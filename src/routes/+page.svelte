@@ -58,12 +58,42 @@
 	// État pour gérer les menus contextuels
 	let activeMenuTrackId: number | null = $state(null);
 
+	let menuElement: HTMLDivElement | null = null;
+	let menuItems: Array<HTMLButtonElement | null> = [null, null, null];
+
 	function toggleMenu(trackId: number) {
 		activeMenuTrackId = activeMenuTrackId === trackId ? null : trackId;
+		// Focus management: wait for menu to render, then focus first item
+		setTimeout(() => {
+			if (activeMenuTrackId === trackId && menuItems[0]) {
+				menuItems[0].focus();
+			}
+		}, 0);
 	}
 
 	function closeMenu() {
 		activeMenuTrackId = null;
+	}
+
+	function handleMenuKeydown(e: KeyboardEvent) {
+		const idx = menuItems.findIndex(item => item === document.activeElement);
+		if (e.key === 'ArrowDown') {
+			e.preventDefault();
+			const nextIdx = (idx + 1) % menuItems.length;
+			menuItems[nextIdx]?.focus();
+		} else if (e.key === 'ArrowUp') {
+			e.preventDefault();
+			const prevIdx = (idx - 1 + menuItems.length) % menuItems.length;
+			menuItems[prevIdx]?.focus();
+		} else if (e.key === 'Home') {
+			e.preventDefault();
+			menuItems[0]?.focus();
+		} else if (e.key === 'End') {
+			e.preventDefault();
+			menuItems[menuItems.length - 1]?.focus();
+		} else if (e.key === 'Escape') {
+			closeMenu();
+		}
 	}
 </script>
 
@@ -173,44 +203,80 @@
 								</button>
 
 								<!-- Bouton menu options -->
-								<div class="dropdown dropdown-end">
+								<div class="relative">
 									<button
-										onclick={() => toggleMenu(track.id)}
+										onclick={(e) => { e.stopPropagation(); toggleMenu(track.id); }}
+										onkeydown={(e) => {
+											if (e.key === 'Enter' || e.key === ' ') {
+												e.preventDefault();
+												e.stopPropagation();
+												toggleMenu(track.id);
+											}
+										}}
 										class="btn btn-square btn-ghost btn-sm"
-										aria-label="Plus d'options"
+										aria-label="Options"
 									>
 										<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-											<path d="M12,16A2,2 0 0,1 14,18A2,2 0 0,1 12,20A2,2 0 0,1 10,18A2,2 0 0,1 12,16M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4Z"/>
+											<circle cx="12" cy="5" r="2"/>
+											<circle cx="12" cy="12" r="2"/>
+											<circle cx="12" cy="19" r="2"/>
 										</svg>
 									</button>
 
 									{#if activeMenuTrackId === track.id}
-										<ul class="dropdown-content menu bg-base-100 rounded-box z-10 w-52 p-2 shadow-lg">
-											<li>
-												<button onclick={() => { playTrack(track); closeMenu(); }} class="flex items-center gap-2">
-													<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-														<polygon points="5,3 19,12 5,21" />
-													</svg>
-													Jouer maintenant
-												</button>
-											</li>
-											<li>
-												<button onclick={() => { playNext(track); closeMenu(); }} class="flex items-center gap-2">
-													<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-														<path d="M8,5V19L19,12M6,5V19L17,12"/>
-													</svg>
-													Jouer ensuite
-												</button>
-											</li>
-											<li>
-												<button onclick={() => { addToQueue(track); closeMenu(); }} class="flex items-center gap-2">
-													<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-														<path d="M15,6H3V8H15V6M15,10H3V12H15V10M3,16H11V14H3V16M17,6V14.18C16.69,14.07 16.35,14 16,14A3,3 0 0,0 13,17A3,3 0 0,0 16,20A3,3 0 0,0 19,17V8H22V6H17Z"/>
-													</svg>
-													Ajouter à la file d'attente
-												</button>
-											</li>
-										</ul>
+										<div
+											class="absolute right-0 top-full mt-1 menu bg-base-100 rounded-box z-50 w-52 p-2 shadow-lg border border-base-300"
+											onclick={(e) => e.stopPropagation()}
+											onkeydown={handleMenuKeydown}
+											role="menu"
+											tabindex="-1"
+											bind:this={menuElement}
+										>
+											<ul>
+												<li>
+													<button
+														bind:this={menuItems[0]}
+														tabindex="0"
+														role="menuitem"
+														onclick={() => { playTrack(track); closeMenu(); }}
+														class="flex items-center gap-2"
+													>
+														<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+															<polygon points="5,3 19,12 5,21" />
+														</svg>
+														Jouer maintenant
+													</button>
+												</li>
+												<li>
+													<button
+														bind:this={menuItems[1]}
+														tabindex="-1"
+														role="menuitem"
+														onclick={() => { playNext(track); closeMenu(); }}
+														class="flex items-center gap-2"
+													>
+														<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+															<path d="M8,5V19L19,12M6,5V19L17,12"/>
+														</svg>
+														Jouer ensuite
+													</button>
+												</li>
+												<li>
+													<button
+														bind:this={menuItems[2]}
+														tabindex="-1"
+														role="menuitem"
+														onclick={() => { addToQueue(track); closeMenu(); }}
+														class="flex items-center gap-2"
+													>
+														<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+															<path d="M15,6H3V8H15V6M15,10H3V12H15V10M3,16H11V14H3V16M17,6V14.18C16.69,14.07 16.35,14 16,14A3,3 0 0,0 13,17A3,3 0 0,0 16,20A3,3 0 0,0 19,17V8H22V6H17Z"/>
+														</svg>
+														Ajouter à la file d'attente
+													</button>
+												</li>
+											</ul>
+										</div>
 									{/if}
 								</div>
 							</div>
