@@ -47,7 +47,7 @@ export async function searchTracks(query: string): Promise<Track[]> {
 	}
 }
 
-export async function getTrackUrl(trackId: number): Promise<string> {
+export async function getMusicUrl(trackId: number): Promise<string> {
 	try {
 		const response = await fetch(`${API_URL}/stream?trackId=${trackId}&quality=27`); // a refactor (a voir)
 		if (!response.ok) {
@@ -59,4 +59,23 @@ export async function getTrackUrl(trackId: number): Promise<string> {
 		console.error('Erreur de lecture:', error);
 		return '';
 	}
+}
+
+export async function getTrack(trackId: number): Promise<Track | null> {
+    try {
+        const response = await fetch(`${API_URL}/search?q=${trackId}&type=track&limit=1`);
+        if (!response.ok) {
+            throw new Error('Erreur lors de la récupération de la piste');
+        }
+        const data = await response.json();
+        for (const item of data.tracks) {
+            if (item.id === trackId) {
+                return item;
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error('Erreur de récupération:', error);
+        return null;
+    }
 }

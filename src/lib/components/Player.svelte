@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Track } from '$lib/components/SearchTracks';
+	import type { Track } from '$lib/models/Track';
 	import * as api from '$lib/components/SearchTracks';
 	import {
 		queueStore,
@@ -34,6 +34,24 @@
 	// Synchroniser avec le store de queue
 	$effect(() => {
 		currentTrack = $queueCurrentTrack;
+		if (audioElement && $queueCurrentTrack) {
+			api.getMusicUrl($queueCurrentTrack.id).then(url => {
+				if (audioElement) {
+					console.log('Setting audio source:', url);
+					audioElement.src = url;
+					audioElement.volume = volume / 100;
+					// Si on était en train de jouer, reprendre la lecture
+					if (isPlaying) {
+						audioElement.play().catch(error => {
+							console.error('Error playing audio:', error);
+							isPlaying = false;
+						});
+					}
+				}
+			}).catch(error => {
+				console.error('Error loading music URL:', error);
+			});
+		}
 	});
 
 	async function handlePlayTrack(track: Track) {
@@ -48,9 +66,7 @@
 		// La piste sera automatiquement mise à jour via l'effect
 		if (audioElement && track) {
 			isPlaying = true;
-			audioElement.src = await api.getTrackUrl(track.id);
 			audioElement.volume = volume / 100;
-			audioElement.play();
 		}
 	}
 
@@ -69,23 +85,13 @@
 	// Nouvelle fonction pour piste suivante
 	async function handleNext() {
 		queueStore.next();
-		if ($queueCurrentTrack && audioElement) {
-			isPlaying = true;
-			audioElement.src = await api.getTrackUrl($queueCurrentTrack.id);
-			audioElement.volume = volume / 100;
-			audioElement.play();
-		}
+		isPlaying = true;
 	}
 
 	// Nouvelle fonction pour piste précédente
 	async function handlePrevious() {
 		queueStore.previous();
-		if ($queueCurrentTrack && audioElement) {
-			isPlaying = true;
-			audioElement.src = await api.getTrackUrl($queueCurrentTrack.id);
-			audioElement.volume = volume / 100;
-			audioElement.play();
-		}
+		isPlaying = true;
 	}
 
 	// Nouvelle fonction pour gérer la fin de piste
@@ -240,7 +246,6 @@
 						class="btn btn-ghost btn-square btn-sm"
 						disabled={!$hasPrevious}
 						class:opacity-50={!$hasPrevious}
-                        aria-label="Piste précédente"
 					>
 						<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
 							<path d="M6 6h2v12H6zm3.5 6l8.5 6V6l-8.5 6z" />
@@ -267,7 +272,6 @@
 						class="btn btn-ghost btn-square btn-sm"
 						disabled={!$hasNext}
 						class:opacity-50={!$hasNext}
-                        aria-label="Piste suivante"
 					>
 						<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
 							<path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
@@ -280,7 +284,6 @@
 					onclick={toggleQueue}
 					class="btn btn-ghost btn-square btn-sm"
 					class:text-primary={showQueue}
-                    aria-label="Queue"
 				>
 					<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
 						<path
