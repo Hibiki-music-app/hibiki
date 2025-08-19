@@ -49,7 +49,7 @@
 <div class="min-h-screen bg-base-200">
 	<Header onHomeClick={handleHomeClick} />
 
-	<main>
+	<main class="transition-all duration-300" class:mr-[25rem]={showQueue}>
 		{@render children?.()}
 	</main>
 
