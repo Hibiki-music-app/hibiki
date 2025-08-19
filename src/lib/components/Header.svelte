@@ -6,31 +6,12 @@
 	//theme
 	let currentTheme = $state('auto');
 
-	// État pour la popup des paramètres (plus nécessaire avec DaisyUI dropdown)
-	let searchInput: HTMLInputElement | null = $state(null);
-
 	// État de connexion de l'utilisateur (à adapter selon votre système d'auth)
 	let isUserLoggedIn = $state(true);
 	let userAvatar = $state(
 		'https://s4.anilist.co/file/anilistcdn/user/avatar/large/b647930-aI0nneV0XlFa.png'
 	);
 	let userName = $state('Utilisateur');
-
-	// Gestion du raccourci Ctrl+K pour focus sur la barre de recherche
-	onMount(() => {
-		const handleKeydown = (event: KeyboardEvent) => {
-			if (event.ctrlKey && event.key === 'k') {
-				event.preventDefault();
-				searchInput?.focus();
-			}
-		};
-
-		document.addEventListener('keydown', handleKeydown);
-
-		return () => {
-			document.removeEventListener('keydown', handleKeydown);
-		};
-	});
 
 	function setTheme(theme: string) {
 		currentTheme = theme;
