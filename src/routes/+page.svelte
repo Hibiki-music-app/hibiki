@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as api from '$lib/components/SearchTracks';
-	import type { Track } from '$lib/components/SearchTracks';
+	import type { Track } from '$lib/models/Track';
 	import { queueStore } from '$lib/stores/playerStore';
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import { getContext } from 'svelte';

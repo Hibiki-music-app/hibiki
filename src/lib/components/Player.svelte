@@ -35,22 +35,25 @@
 	$effect(() => {
 		currentTrack = $queueCurrentTrack;
 		if (audioElement && $queueCurrentTrack) {
-			api.getMusicUrl($queueCurrentTrack.id).then(url => {
-				if (audioElement) {
-					console.log('Setting audio source:', url);
-					audioElement.src = url;
-					audioElement.volume = volume / 100;
-					// Si on était en train de jouer, reprendre la lecture
-					if (isPlaying) {
-						audioElement.play().catch(error => {
-							console.error('Error playing audio:', error);
-							isPlaying = false;
-						});
+			api
+				.getMusicUrl($queueCurrentTrack.id)
+				.then((url) => {
+					if (audioElement) {
+						console.log('Setting audio source:', url);
+						audioElement.src = url;
+						audioElement.volume = volume / 100;
+						// Si on était en train de jouer, reprendre la lecture
+						if (isPlaying) {
+							audioElement.play().catch((error) => {
+								console.error('Error playing audio:', error);
+								isPlaying = false;
+							});
+						}
 					}
-				}
-			}).catch(error => {
-				console.error('Error loading music URL:', error);
-			});
+				})
+				.catch((error) => {
+					console.error('Error loading music URL:', error);
+				});
 		}
 	});
 
