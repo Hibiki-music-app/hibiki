@@ -1,17 +1,19 @@
 import { auth } from "$lib/auth";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { building } from '$app/environment'
-import { redirect } from '@sveltejs/kit';
 
 
 export async function handle({ event, resolve }) {
 
-	const protectedRoutes = ['/profile'];
-	if (protectedRoutes.includes(event.url.pathname)) {
-		if (!event.locals) {
-			console.log('redirect to login!')
-			throw redirect(303, "/auth/login");
-		}
+	// fetch current session from betterauth
+	const session = await auth.api.getSession({
+		headers: event.request.headers,
+	})
+	// make session and user available on server
+	if (session) {
+		// populate the event
+		event.locals.session = session.session;
+		event.locals.user = session.user;
 	}
 	return svelteKitHandler({ event, resolve, auth, building });
 }
