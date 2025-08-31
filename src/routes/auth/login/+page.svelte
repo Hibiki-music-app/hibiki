@@ -1,46 +1,27 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import { authClient } from '$lib/client';
-	import { onMount } from 'svelte';
+	import { ClientRouter } from '$lib/services/ApiEndpoints';
 
-	let email = '',
-		password = '';
 	let message = '',
 		isError = false;
 
-	onMount(() => {
-		authClient.oneTap(); // google one tap
+	// TODO: google one tap
+	/* onMount(() => {
+		authClient.oneTap(); 
 	});
+	*/
 
-	// email password classique 
-	async function handleLogin(event: Event) {
-		event.preventDefault();
-		const { data, error } = await authClient.signIn.email(
-			{
-				email,
-				password,
-				callbackURL: '/profile',
-				rememberMe: false
-			},
-			{
-				onSuccess: () => {
-					message = 'Success';
-					isError = false;
-				},
-				onError: (ctx) => {
-					alert(ctx.error.message);
-					message = error?.message || 'Login failed.';
-					isError = true;
-				}
-			}
-		);
-	};
+	// email password classique -> SSR
+	export let form;
+
 
 	// google oauth
 	async function handleGoogleLogin() {
 		await authClient.signIn.social(
 			{
 				provider: 'google',
-				callbackURL: '/profile',
+				callbackURL: ClientRouter.profile,
 			},
 			{
 				onSuccess: () => {
@@ -59,43 +40,40 @@
 </script>
 
 <div class="bg-cover bg-center bg-no-repeat flex items-center justify-center w-full h-svh">
-	<form on:submit={handleLogin} method="POST">
+	<form method="POST" use:enhance>
 		<div class="hero bg-base-200 min-h-screen">
 			<div class="hero-content flex-col lg:flex-row-reverse">
+
 				<div class="text-center lg:text-left">
 					<h1 class="text-5xl font-bold">Hibiki connect!</h1>
 					<p class="py-6">
-						<a href="/auth/signup">First time here?</a>
+						<a href={ClientRouter.signup}>First time here?</a>
 					</p>
 				</div>
+
 				<div class="card bg-base-100 w-full max-w-sm shrink-0 shadow-2xl">
 					<div class="card-body">
-						<div class="text-center" id="message">
-							<p style="color: {isError ? 'red' : 'green'}">{message}</p>
-						</div>
+
+						{#if form?.message}
+							<div class="text-center" id="message">
+								<p style="color: {form.success ? 'green' : 'red'}">{form.message}</p>
+							</div>
+						{/if}
 
 						<label class="label" for="email">Email</label>
-						<input type="email" class="input" id="email" placeholder="email" bind:value={email} />
+						<input type="email" class="input" id="email" placeholder="email" name="email" />
 
 						<label class="label" for="password">Password</label>
-						<input
-							type="password"
-							class="input"
-							id="password"
-							placeholder="password"
-							bind:value={password}
-						/>
+						<input type="password" class="input" id="password" placeholder="password" name="password"/>
 
-						<button class="btn bg-gradient-to-r from-violet-300 to-blue-600 mt-4" id="loginButton"
-							>Login</button
-						>
+						<button class="btn bg-gradient-to-r from-violet-300 to-blue-600 mt-4" id="loginButton" name="login" type="submit">Login</button>
 
+						<!-- google OAuth (client side only) pas possible de le ssr -->
 						<button 
-							class="btn bg-white text-black border-[#e5e5e5]"
-							type="button"
+							class="btn bg-white text-black border-[#e5e5e5]" 
+							type="button" 
 							on:click={handleGoogleLogin}
-						>
-							<svg
+							><svg
 								aria-label="Google logo"
 								width="16"
 								height="16"

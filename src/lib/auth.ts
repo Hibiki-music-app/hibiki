@@ -33,6 +33,6 @@ export const auth = betterAuth({
 	},
 	plugins: [		// put in last
 		sveltekitCookies(getRequestEvent),
-		oneTap(),
+		// oneTap(),
 	], 
 	});

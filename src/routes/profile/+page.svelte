@@ -9,9 +9,14 @@
 		<div class="max-w-md">
 			<h1 class="mb-5 text-5xl font-bold">Hello there</h1>
 			<p class="mb-5">welcome to your profile page.</p>
-			{#if user}
+			{#if user?.name}
 				<p class="mb-5">Email : {user.email}</p>
-				<p class="mb-5">Username : {user.username}</p>
+				<p class="mb-5">Username : {user.name}</p>
+				<div class="avatar">
+					<div class="w-24 rounded">
+						<img alt="pp" src={user.image} />
+					</div>
+				</div>
 			{/if}
 			<button class="btn btn-primary">Get Started</button>
 		</div>
