@@ -4,6 +4,8 @@ import { db } from '../index';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { getRequestEvent } from '$app/server';
 import { user, account, session, verification } from '$lib/db/schema';
+import { oneTap } from "better-auth/plugins"; 
+
 
 // better Auth instance & pluggins
 export const auth = betterAuth({
@@ -25,7 +27,12 @@ export const auth = betterAuth({
 		google: {
 			clientId: process.env.GOOGLE_CLIENT_ID as string,
 			clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+			accessType: "offline",
+			prompt: "select_account consent",
 		}
 	},
-	plugins: [sveltekitCookies(getRequestEvent)], // put in last
+	plugins: [		// put in last
+		sveltekitCookies(getRequestEvent),
+		oneTap(),
+	], 
 	});
