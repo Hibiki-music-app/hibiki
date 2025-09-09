@@ -2,18 +2,28 @@
 	import { onMount } from 'svelte';
 	import userIcon from '$lib/assets/user.svg';
 	import favicon from '$lib/assets/favicon.svg';
+	import { ClientRouter } from '$lib/services/ApiEndpoints';
+    import type {UserType} from "$lib/models/UserType";
 
-	//theme
+    // fetch the current user from layout (that get from locals)
+    let {
+        user = $bindable(),
+        onHomeClick = $bindable(),
+    } : {
+        user: UserType | null,
+        onHomeClick: HeaderProps
+
+    } = $props();
+
 	let currentTheme = $state('auto');
 
-	// État pour la popup des paramètres (plus nécessaire avec DaisyUI dropdown)
+	// Référence pour la barre de recherche
 	let searchInput: HTMLInputElement | null = $state(null);
 
-	// État de connexion de l'utilisateur (à adapter selon votre système d'auth)
-	let isUserLoggedIn = $state(true);
-	let userAvatar = $state(
-		'https://s4.anilist.co/file/anilistcdn/user/avatar/large/b647930-aI0nneV0XlFa.png'
-	);
+	let isUserLoggedIn = $state(true); // to change
+
+	let userAvatar = $state('');
+
 	let userName = $state('Utilisateur');
 
 	// Gestion du raccourci Ctrl+K pour focus sur la barre de recherche
@@ -27,20 +37,40 @@
 
 		document.addEventListener('keydown', handleKeydown);
 
+		const USER_KEY = 'currentUser'; // changer
+		function loadUserFromLocal() {
+			const raw = localStorage.getItem(USER_KEY);
+			if (!raw) {
+				isUserLoggedIn = false;
+				return;
+			}
+			const u = JSON.parse(raw);
+			isUserLoggedIn = true;
+			userAvatar = u?.image;
+			userName = u.name
+		}
+		loadUserFromLocal();
+
+		const handleStorage = (e: StorageEvent) => {
+			if (e.key === USER_KEY) loadUserFromLocal();
+		};
+		window.addEventListener('storage', handleStorage);
+
 		return () => {
 			document.removeEventListener('keydown', handleKeydown);
+			window.removeEventListener('storage', handleStorage);
 		};
 	});
+
+
 
 	// Props pour les événements
 	interface HeaderProps {
 		onHomeClick?: () => void;
 	}
 
-	let { onHomeClick }: HeaderProps = $props();
-
 	function handleHomeClick() {
-		onHomeClick?.();
+        onHomeClick?.onHomeClick?.();
 	}
 
 
@@ -62,6 +92,16 @@
 		</span>
 	</button>
 
+	<!-- Add search input bound to the searchInput variable -->
+	<div class="relative">
+		<input
+			type="search"
+			placeholder="Rechercher..."
+			class="input input-bordered w-full max-w-xs"
+			bind:this={searchInput}
+		/>
+	</div>
+
 	<div class="dropdown dropdown-end">
 		<button tabindex="0" class="btn btn-ghost btn-circle avatar border border-base-300 hover:border-base-content/20 hover:shadow-lg transition-all duration-200 ease-in-out">
 			<div class="w-10 rounded-full">
@@ -81,8 +121,8 @@
 					</div>
 				</a>
 			</li>
-			<li><a href="/settings">Paramètres</a></li>
-			<li><a href="/auth/logout">Déconnexion</a></li>
+			<li><a href="/">Paramètres</a></li>
+			<li><a href={ClientRouter.logout}>Déconnexion</a></li>
 			<li>
 				<div class="flex items-center justify-between p-2">
 					<span class="text-sm font-medium">Thème</span>

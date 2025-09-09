@@ -4,15 +4,22 @@
 	import Header from '$lib/components/Header.svelte';
 	import Player from '$lib/components/Player.svelte';
 	import Queue from '$lib/components/Queue.svelte';
-	import type { Track } from '$lib/components/SearchTracks';
 	import { setContext } from 'svelte';
 	import { goto } from '$app/navigation';
-
-	let { children } = $props();
+    import type { Track } from '$lib/models/Track';
+    import type {UserType} from "$lib/models/UserType";
 
 	function handleHomeClick() {
 		goto('/');
 	}
+
+    let { children, data } : {
+        children: never;
+        data: {
+            user: UserType | null
+        }
+    };
+    const { user } = data;
 
 	// État global du player
 	let currentTrack: Track | null = $state(null);
@@ -47,7 +54,10 @@
 
 <!-- DaisyUI Layout with Header -->
 <div class="min-h-screen bg-base-200">
-	<Header onHomeClick={handleHomeClick} />
+	<Header
+            onHomeClick={handleHomeClick}
+            user={user}
+    />
 
 	<main>
 		{@render children?.()}
