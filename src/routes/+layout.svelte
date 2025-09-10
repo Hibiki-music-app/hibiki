@@ -13,12 +13,11 @@
 		goto('/');
 	}
 
-    let { children, data } : {
-        children: never;
-        data: {
-            user: UserType | null
-        }
-    };
+    let {children, data}: {
+        children;
+        data: {user: UserType | null};
+    } = $props();
+
     const { user } = data;
 
 	// État global du player
@@ -60,7 +59,11 @@
     />
 
 	<main>
-		{@render children?.()}
+        {#if children}
+		    {@render children()}
+        {:else}
+            <p>no content :\</p>
+        {/if}
 	</main>
 
 	<Player

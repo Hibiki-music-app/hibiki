@@ -1,9 +1,9 @@
 export interface UserType {
 	id: string;
-	name: string;
 	email: string;
 	emailVerified: boolean;
-	image?: string;
+	name: string;
 	createdAt: Date;
 	updatedAt: Date;
+	image?: string | null | undefined;
 }
