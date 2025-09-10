@@ -61,10 +61,10 @@
 						{/if}
 
 						<label class="label" for="email">Email</label>
-						<input type="email" class="input" id="email" placeholder="email" name="email" />
+						<input type="email" class="input" id="email" placeholder="email" name="email" required/>
 
 						<label class="label" for="password">Password</label>
-						<input type="password" class="input" id="password" placeholder="password" name="password"/>
+						<input type="password" class="input" id="password" placeholder="password" name="password" required/>
 
 						<button class="btn bg-gradient-to-r from-violet-300 to-blue-600 mt-4" id="loginButton" name="login" type="submit">Login</button>
 

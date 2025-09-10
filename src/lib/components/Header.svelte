@@ -11,8 +11,7 @@
         onHomeClick = $bindable(),
     } : {
         user: UserType | null,
-        onHomeClick: HeaderProps
-
+        onHomeClick: () => void
     } = $props();
 
 	let currentTheme = $state('auto');
@@ -20,11 +19,6 @@
 	// Référence pour la barre de recherche
 	let searchInput: HTMLInputElement | null = $state(null);
 
-	let isUserLoggedIn = $state(true); // to change
-
-	let userAvatar = $state('');
-
-	let userName = $state('Utilisateur');
 
 	// Gestion du raccourci Ctrl+K pour focus sur la barre de recherche
 	onMount(() => {
@@ -37,42 +31,15 @@
 
 		document.addEventListener('keydown', handleKeydown);
 
-		const USER_KEY = 'currentUser'; // changer
-		function loadUserFromLocal() {
-			const raw = localStorage.getItem(USER_KEY);
-			if (!raw) {
-				isUserLoggedIn = false;
-				return;
-			}
-			const u = JSON.parse(raw);
-			isUserLoggedIn = true;
-			userAvatar = u?.image;
-			userName = u.name
-		}
-		loadUserFromLocal();
 
-		const handleStorage = (e: StorageEvent) => {
-			if (e.key === USER_KEY) loadUserFromLocal();
-		};
-		window.addEventListener('storage', handleStorage);
-
-		return () => {
-			document.removeEventListener('keydown', handleKeydown);
-			window.removeEventListener('storage', handleStorage);
-		};
 	});
 
 
 
 	// Props pour les événements
-	interface HeaderProps {
-		onHomeClick?: () => void;
+    function handleHomeClick() {
+        onHomeClick?.();
 	}
-
-	function handleHomeClick() {
-        onHomeClick?.onHomeClick?.();
-	}
-
 
 	function setTheme(theme: string) {
 		currentTheme = theme;
@@ -105,8 +72,8 @@
 	<div class="dropdown dropdown-end">
 		<button tabindex="0" class="btn btn-ghost btn-circle avatar border border-base-300 hover:border-base-content/20 hover:shadow-lg transition-all duration-200 ease-in-out">
 			<div class="w-10 rounded-full">
-				{#if isUserLoggedIn}
-					<img src={userAvatar} alt="Avatar de l'utilisateur" />
+				{#if user}
+					<img src={user?.image} alt="Avatar de l'utilisateur" />
 				{:else}
 					<img src={userIcon} alt="Icône utilisateur" />
 				{/if}
@@ -116,13 +83,17 @@
 			<li>
 				<a href="/profile" class="justify-between">
 					<div class="flex items-center gap-2">
-						<img class="w-6 h-6 rounded-full" src={userAvatar} alt="Avatar de l'utilisateur" />
-						<span>{userName}</span>
+						<img class="w-6 h-6 rounded-full" src={user?.image} alt="Avatar de l'utilisateur" />
+						<span>{user?.name}</span>
 					</div>
 				</a>
 			</li>
 			<li><a href="/">Paramètres</a></li>
-			<li><a href={ClientRouter.logout}>Déconnexion</a></li>
+            {#if user}
+			    <li><a href={ClientRouter.logout}>Déconnexion</a></li>
+                {:else}
+                <li><a href={ClientRouter.login}>Connexion</a></li>
+            {/if}
 			<li>
 				<div class="flex items-center justify-between p-2">
 					<span class="text-sm font-medium">Thème</span>
