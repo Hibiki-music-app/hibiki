@@ -1,5 +1,7 @@
 <script lang="ts">
-	export let data;
+	import {RandomAvatar} from "$lib/services/ApiEndpoints";
+
+    export let data;
 	const { user } = data;
 </script>
 
@@ -8,11 +10,11 @@
 		<figure class="px-10 pt-10">
 			<div class="avatar">
 				<div class="w-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-					<img src={user?.image || '/default-avatar.png'} alt="User Avatar" />
+					<img src={user?.image || RandomAvatar} alt="User Avatar" />
 				</div>
 			</div>
 		</figure>
-		<div class="card-body items-center text-center">
+		<div class="card-body items-center text-center m-4">
 			<h2 class="card-title">{user?.name || 'User'}</h2>
 			
 			<div class="w-full space-y-3 mt-4">

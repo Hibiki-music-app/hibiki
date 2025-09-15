@@ -1,5 +1,5 @@
 import { auth } from '$lib/auth';
-import type { Actions } from '@sveltejs/kit';
+import { type Actions, redirect } from '@sveltejs/kit';
 import { ClientRouter } from '$lib/services/ApiEndpoints';
 
 
@@ -12,10 +12,7 @@ export const actions: Actions = {
 			headers: rHeaders
 		});
 		//cookies.delete('session', { path: '/'});
-		return {
-			success: true,
-			redirect: ClientRouter.login
-		};
+		throw redirect(303, ClientRouter.login)
 	}
 
 }

@@ -13,7 +13,7 @@
 	*/
 
 	// email password classique -> SSR
-	export let form;
+    export const form = { email: '', password: '' };
 
 
 	// google oauth
@@ -25,8 +25,8 @@
 			},
 			{
 				onSuccess: () => {
-					message: 'Signed in with Google';
-					isError: false;
+					message = 'Signed in with Google';
+					isError = false;
 				},
 				onError: (ctx) => {
 					alert(ctx.error.message);
@@ -35,7 +35,7 @@
 				}
 			},
 		)
-	};
+	}
 
 </script>
 
@@ -54,11 +54,14 @@
 				<div class="card bg-base-100 w-full max-w-sm shrink-0 shadow-2xl">
 					<div class="card-body">
 
-						{#if form?.message}
-							<div class="text-center" id="message">
-								<p style="color: {form.success ? 'green' : 'red'}">{form.message}</p>
-							</div>
-						{/if}
+                        {#if message || isError}
+                            <div role="alert" class="alert alert-warning">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <span>Warning: Invalid email address!</span>
+                            </div>
+                        {/if}
 
 						<label class="label" for="email">Email</label>
 						<input type="email" class="input" id="email" placeholder="email" name="email" required/>

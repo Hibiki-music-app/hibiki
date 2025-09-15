@@ -9,22 +9,23 @@ export const actions: Actions = {
         const email = formData.get('email') as string;
         const password = formData.get('password') as string;
 				const rHeaders = request.headers;
-        try {
-            const data = await auth.api.signInEmail({
-                body: {
-                    email: email,
-                    password: password,
-                    rememberMe: true,
-                    callbackURL: ClientRouter.profile,
-                },
-							headers: rHeaders
-            })
-            return {
-							success: true,
-							redirect: ClientRouter.profile
-						};
-        } catch (error: any) {
-            return { success: false, message: error.message || 'Login failed' };
-        }
+				console.log(rHeaders)
+
+				const loginForm = await auth.api.signInEmail({
+					body: {
+						email: email,
+						password: password,
+						rememberMe: true,
+						callbackURL: ClientRouter.profile,
+					},
+					headers: rHeaders,
+				});
+				if (!loginForm) {
+					return {error: "Identifiants invalides ou réponse inattendue du serveur."}
+				}
+
+				throw redirect(303, ClientRouter.profile);
+
+
     }
 }

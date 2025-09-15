@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import userIcon from '$lib/assets/user.svg';
 	import favicon from '$lib/assets/favicon.svg';
-	import { ClientRouter } from '$lib/services/ApiEndpoints';
+    import {ClientRouter, RandomAvatar} from '$lib/services/ApiEndpoints';
     import type {UserType} from "$lib/models/UserType";
 
     // fetch the current user from layout (that get from locals)
@@ -73,7 +73,7 @@
 		<button tabindex="0" class="btn btn-ghost btn-circle avatar border border-base-300 hover:border-base-content/20 hover:shadow-lg transition-all duration-200 ease-in-out">
 			<div class="w-10 rounded-full">
 				{#if user}
-					<img src={user?.image} alt="Avatar de l'utilisateur" />
+					<img src={user?.image || RandomAvatar} alt="Avatar de l'utilisateur" />
 				{:else}
 					<img src={userIcon} alt="Icône utilisateur" />
 				{/if}
@@ -83,7 +83,7 @@
 			<li>
 				<a href="/profile" class="justify-between">
 					<div class="flex items-center gap-2">
-						<img class="w-6 h-6 rounded-full" src={user?.image} alt="Avatar de l'utilisateur" />
+						<img class="w-6 h-6 rounded-full" src={user?.image || RandomAvatar} alt="Avatar de l'utilisateur" />
 						<span>{user?.name}</span>
 					</div>
 				</a>

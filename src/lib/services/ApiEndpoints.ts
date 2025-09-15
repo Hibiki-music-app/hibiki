@@ -1,4 +1,4 @@
-
+// the doc : https://sixnine-dotdev.github.io/dab-api-docs/#/
 export const API_URL: string = 'https://dab.yeet.su/api'; // keep this in .env?
 
 const url = (path: string) => `${API_URL}${path}`;
@@ -17,3 +17,5 @@ export const ClientRouter = {
     logout: "/auth/logout",
     profile: "/profile",
 }
+
+export const RandomAvatar = 'https://avatar.iran.liara.run/public'

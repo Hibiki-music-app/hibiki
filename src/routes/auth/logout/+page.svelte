@@ -15,11 +15,9 @@
 
 {#if data}
     <div class="min-h-screen flex items-center justify-center p-4">
-        <div class="card bg-base-100 w-full max-w-sm shrink-0 shadow-2xl">
             <p>{data?.email}</p>
             <form method="POST">
-                <button type="submit" class="btn">Se déconnecter</button>
+                <button type="submit" class="btn btn-outline btn-warning">Se déconnecter</button>
             </form>
-        </div>
     </div>
 {/if}
