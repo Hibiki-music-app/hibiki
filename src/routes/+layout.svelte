@@ -51,13 +51,12 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<!-- DaisyUI Layout with Header -->
 <div class="min-h-screen bg-base-200">
-	<Header
+	<!--<Header
             onHomeClick={handleHomeClick}
             user={user}
     />
-
+-->
 	<main>
         {#if children}
 		    {@render children()}
