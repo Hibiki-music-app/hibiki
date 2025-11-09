@@ -60,3 +60,18 @@ export interface Track {
 	title: string;
 	length: number | null;
 }
+
+export type SearchEntityType =
+	| 'area'
+	| 'artist'
+	| 'event'
+	| 'genre'
+	| 'instrument'
+	| 'label'
+	| 'place'
+	| 'recording'
+	| 'release'
+	| 'release-group'
+	| 'series'
+	| 'work'
+	| 'url';

@@ -1,4 +1,5 @@
 import {json} from '@sveltejs/kit';
+import { AppName, EmailRequest, MBApiRoot } from '$lib/services/ApiEndpoints';
 
 export async function GET({ url }) {
 	const query = url.searchParams.get('q');
@@ -6,10 +7,10 @@ export async function GET({ url }) {
 		return json({error: 'Missing query'}, {status: 400});
 	}
 	const response = await fetch(
-		`https://musicbrainz.org/ws/2/recording?query=${encodeURIComponent(query)}&fmt=json`,
+		`${MBApiRoot}/recording?query=${encodeURIComponent(query)}&fmt=json`, // changer l'entité recording par d'autres pour appronfondir les recherches et aussi ajouter les types dans models ;)
 		{
 			headers: {
-				'User-Agent': 'Hibiki/0.0.1 ( oscarodark3@gmail.com )'
+				'User-Agent': `${AppName} ( ${EmailRequest} )`
 			}
 		}
 	);
