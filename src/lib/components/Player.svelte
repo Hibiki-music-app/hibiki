@@ -1,12 +1,13 @@
 <script lang="ts">
-	import type { Track } from '$lib/components/SearchTracks';
+	import type { Track } from '$lib/models/Track';
 	import * as api from '$lib/components/SearchTracks';
 	import {
 		queueStore,
 		currentTrack as queueCurrentTrack,
 		hasNext,
-		hasPrevious
+		hasPrevious,
 	} from '$lib/stores/playerStore';
+	import { SkipBack, SkipForward, Play, Pause, Volume2, VolumeX, Volume1, ListMusic } from 'lucide-svelte';
 
 	let {
 		currentTrack = $bindable(),
@@ -14,7 +15,7 @@
 		audioElement = $bindable(),
 		playTrack = $bindable(),
 		togglePlayPause = $bindable(),
-		showQueue = $bindable()
+		showQueue = $bindable(),
 	}: {
 		currentTrack: Track | null;
 		isPlaying: boolean;
@@ -24,14 +25,12 @@
 		showQueue?: boolean;
 	} = $props();
 
-	// États pour la progression temporelle
 	let currentTime = $state(0);
 	let duration = $state(0);
-	let isDragging: boolean = $state(false);
-	let volume: number = $state(50);
-	let showVolumeSlider: boolean = $state(false);
+	let isDragging = $state(false);
+	let volume = $state(70);
+	let showVolumeSlider = $state(false);
 
-	// Synchroniser avec le store de queue
 	$effect(() => {
 		currentTrack = $queueCurrentTrack;
 	});
@@ -41,11 +40,7 @@
 			handleTogglePlayPause();
 			return;
 		}
-
-		// Utiliser le store de queue pour jouer la piste
 		queueStore.playTrack(track);
-
-		// La piste sera automatiquement mise à jour via l'effect
 		if (audioElement && track) {
 			isPlaying = true;
 			audioElement.src = await api.getTrackUrl(track.id);
@@ -56,7 +51,6 @@
 
 	function handleTogglePlayPause() {
 		if (!audioElement) return;
-
 		if (isPlaying) {
 			audioElement.pause();
 			isPlaying = false;
@@ -66,7 +60,6 @@
 		}
 	}
 
-	// Nouvelle fonction pour piste suivante
 	async function handleNext() {
 		queueStore.next();
 		if ($queueCurrentTrack && audioElement) {
@@ -77,7 +70,6 @@
 		}
 	}
 
-	// Nouvelle fonction pour piste précédente
 	async function handlePrevious() {
 		queueStore.previous();
 		if ($queueCurrentTrack && audioElement) {
@@ -88,7 +80,6 @@
 		}
 	}
 
-	// Nouvelle fonction pour gérer la fin de piste
 	async function handleTrackEnded() {
 		if ($hasNext) {
 			await handleNext();
@@ -97,16 +88,13 @@
 		}
 	}
 
-	// Fonction pour basculer l'affichage de la queue
 	function toggleQueue() {
 		showQueue = !showQueue;
 	}
 
-	// Assigner les fonctions aux props
 	playTrack = handlePlayTrack;
 	togglePlayPause = handleTogglePlayPause;
 
-	// Fonctions pour gérer la progression temporelle
 	function handleTimeUpdate() {
 		if (!isDragging && audioElement) {
 			currentTime = audioElement.currentTime;
@@ -114,28 +102,21 @@
 	}
 
 	function handleVolumeChange(event: Event) {
-		const target = event.target as HTMLInputElement;
-		volume = parseFloat(target.value);
-		if (audioElement) {
-			audioElement.volume = volume / 100; // Convertir en 0-1
-		}
-	}
-
-	function toggleVolumeSlider() {
-		showVolumeSlider = !showVolumeSlider;
+		volume = parseFloat((event.target as HTMLInputElement).value);
+		if (audioElement) audioElement.volume = volume / 100;
 	}
 
 	function handleLoadedMetadata() {
 		if (audioElement) {
 			duration = audioElement.duration;
-			audioElement.volume = volume / 100; // Convertir en 0-1
+			audioElement.volume = volume / 100;
 		}
 	}
 
 	function handleSeek(event: Event) {
 		if (audioElement) {
-			const target = event.target as HTMLInputElement;
-			const time = (parseFloat(target.value) / 100) * duration;
+			const val = parseFloat((event.target as HTMLInputElement).value);
+			const time = (val / 100) * duration;
 			audioElement.currentTime = time;
 			currentTime = time;
 		}
@@ -147,146 +128,136 @@
 		const secs = Math.floor(seconds % 60);
 		return `${mins}:${secs.toString().padStart(2, '0')}`;
 	}
+
+	const progressPercent = $derived(duration > 0 ? (currentTime / duration) * 100 : 0);
 </script>
 
 {#if currentTrack}
-	<div class="btm-nav bg-base-100 shadow-lg">
-		<div class="flex flex-col w-full px-4 py-2">
-			<!-- Barre de progression -->
-			<div class="flex items-center gap-2 mb-2">
-				<span class="text-xs opacity-60 min-w-[2.5rem]">
-					{formatTime(currentTime)}
-				</span>
+	<div
+		class="glass-strong fixed bottom-4 left-4 right-4 z-50 rounded-[1.25rem] px-4 py-3"
+		style="max-width: min(1100px, calc(100% - 2rem)); margin: 0 auto; left: 50%; transform: translateX(-50%); width: calc(100% - 2rem);
+			   box-shadow: 0 25px 60px rgba(2,6,23,0.5), 0 4px 16px rgba(15,23,42,0.4), inset 0 1px 0 rgba(255,255,255,0.05);"
+	>
+		<!-- Progress bar -->
+		<div class="flex items-center gap-3 mb-2">
+			<span class="text-[11px] text-[#64748b] min-w-[2.5rem] text-right tabular-nums">
+				{formatTime(currentTime)}
+			</span>
+			<div class="flex-1 relative">
 				<input
 					type="range"
 					min="0"
 					max="100"
-					value={duration > 0 ? (currentTime / duration) * 100 : 0}
-					class="range range-xs flex-1"
+					value={progressPercent}
+					class="w-full cursor-pointer"
 					oninput={handleSeek}
 					onmousedown={() => (isDragging = true)}
 					onmouseup={() => (isDragging = false)}
 					ontouchstart={() => (isDragging = true)}
 					ontouchend={() => (isDragging = false)}
+					style="background: linear-gradient(to right, #3b82f6 {progressPercent}%, rgba(148,163,184,0.2) {progressPercent}%);"
+					aria-label="Progression"
 				/>
-				<span class="text-xs opacity-60 min-w-[2.5rem]">
-					{formatTime(duration)}
-				</span>
+			</div>
+			<span class="text-[11px] text-[#64748b] min-w-[2.5rem] tabular-nums">
+				{formatTime(duration)}
+			</span>
+		</div>
+
+		<!-- Controls row -->
+		<div class="flex items-center gap-3">
+			<!-- Album cover + track info -->
+			<div class="flex items-center gap-3 flex-1 min-w-0">
+				<div class="w-10 h-10 rounded-lg shrink-0 overflow-hidden"
+					style="box-shadow: 0 0 12px rgba(59,130,246,0.15);">
+					{#if currentTrack.albumCover}
+						<img src={currentTrack.albumCover} alt="Pochette" class="w-full h-full object-cover" />
+					{:else}
+						<div class="w-full h-full glass-subtle flex items-center justify-center text-lg">🎵</div>
+					{/if}
+				</div>
+				<div class="min-w-0">
+					<p class="text-sm font-medium text-[#f8fafc] truncate">{currentTrack.title}</p>
+					<p class="text-xs text-[#94a3b8] truncate">{currentTrack.artist}</p>
+				</div>
 			</div>
 
-			<!-- Contrôles du player -->
-			<div class="flex items-center gap-3 w-full">
-				<!-- Album cover -->
-				<div class="avatar">
-					<div class="w-10 h-10 rounded">
-						{#if currentTrack.albumCover}
-							<img src={currentTrack.albumCover} alt="Album cover" />
-						{:else}
-							<div class="bg-base-300 flex items-center justify-center">🎵</div>
-						{/if}
-					</div>
-				</div>
+			<!-- Playback controls -->
+			<div class="flex items-center gap-2 shrink-0">
+				<button
+					onclick={handlePrevious}
+					disabled={!$hasPrevious}
+					class="btn-glass btn-icon touch-target"
+					aria-label="Piste précédente"
+				>
+					<SkipBack size={18} class={$hasPrevious ? 'text-[#f8fafc]' : 'text-[#475569]'} />
+				</button>
 
-				<!-- Track info -->
-				<div class="flex-1 min-w-0">
-					<div class="text-sm font-medium truncate">{currentTrack.title}</div>
-					<div class="text-xs opacity-70 truncate">{currentTrack.artist}</div>
-				</div>
+				<button
+					onclick={handleTogglePlayPause}
+					class="btn-glass btn-glass-accent btn-icon touch-target"
+					aria-label={isPlaying ? 'Pause' : 'Lecture'}
+				>
+					{#if isPlaying}
+						<Pause size={20} />
+					{:else}
+						<Play size={20} />
+					{/if}
+				</button>
 
-				<!-- Volume control -->
+				<button
+					onclick={handleNext}
+					disabled={!$hasNext}
+					class="btn-glass btn-icon touch-target"
+					aria-label="Piste suivante"
+				>
+					<SkipForward size={18} class={$hasNext ? 'text-[#f8fafc]' : 'text-[#475569]'} />
+				</button>
+			</div>
+
+			<!-- Volume + Queue -->
+			<div class="flex items-center gap-2 shrink-0">
+				<!-- Volume -->
 				<div class="relative">
-					<button onclick={toggleVolumeSlider} class="btn btn-ghost btn-square btn-sm">
+					<button
+						onclick={() => (showVolumeSlider = !showVolumeSlider)}
+						class="btn-glass btn-icon touch-target"
+						aria-label="Volume"
+					>
 						{#if volume === 0}
-							<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-								<path
-									d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"
-								/>
-							</svg>
+							<VolumeX size={16} class="text-[#94a3b8]" />
 						{:else if volume < 50}
-							<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-								<path
-									d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"
-								/>
-							</svg>
+							<Volume1 size={16} class="text-[#94a3b8]" />
 						{:else}
-							<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-								<path
-									d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
-								/>
-							</svg>
+							<Volume2 size={16} class="text-[#94a3b8]" />
 						{/if}
 					</button>
 					{#if showVolumeSlider}
 						<div
-							class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-base-100 p-2 rounded shadow-lg"
+							class="glass-strong absolute bottom-full mb-2 right-0 p-3 rounded-xl"
+							style="min-width: 8rem; animation: slide-up 0.15s ease;"
 						>
 							<input
 								type="range"
 								min="0"
 								max="100"
 								value={volume}
-								class="range range-xs w-20"
+								class="w-full cursor-pointer"
 								oninput={handleVolumeChange}
+								style="background: linear-gradient(to right, #3b82f6 {volume}%, rgba(148,163,184,0.2) {volume}%);"
+								aria-label="Volume"
 							/>
 						</div>
 					{/if}
 				</div>
 
-				<!-- Contrôles de navigation -->
-				<div class="flex items-center gap-2">
-					<!-- Bouton précédent -->
-					<button
-						onclick={handlePrevious}
-						class="btn btn-ghost btn-square btn-sm"
-						disabled={!$hasPrevious}
-						class:opacity-50={!$hasPrevious}
-                        aria-label="Piste précédente"
-					>
-						<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-							<path d="M6 6h2v12H6zm3.5 6l8.5 6V6l-8.5 6z" />
-						</svg>
-					</button>
-
-					<!-- Play/Pause button -->
-					<button onclick={handleTogglePlayPause} class="btn btn-ghost btn-square">
-						{#if isPlaying}
-							<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-								<rect x="6" y="4" width="4" height="16" />
-								<rect x="14" y="4" width="4" height="16" />
-							</svg>
-						{:else}
-							<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-								<polygon points="5,3 19,12 5,21" />
-							</svg>
-						{/if}
-					</button>
-
-					<!-- Bouton suivant -->
-					<button
-						onclick={handleNext}
-						class="btn btn-ghost btn-square btn-sm"
-						disabled={!$hasNext}
-						class:opacity-50={!$hasNext}
-                        aria-label="Piste suivante"
-					>
-						<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-							<path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
-						</svg>
-					</button>
-				</div>
-
-				<!-- Bouton Queue -->
+				<!-- Queue toggle -->
 				<button
 					onclick={toggleQueue}
-					class="btn btn-ghost btn-square btn-sm"
-					class:text-primary={showQueue}
-                    aria-label="Queue"
+					class="btn-glass btn-icon touch-target {showQueue ? 'btn-glass-accent' : ''}"
+					aria-label="File d'attente"
 				>
-					<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-						<path
-							d="M15,6H3V8H15V6M15,10H3V12H15V10M3,16H11V14H3V16M17,6V14.18C16.69,14.07 16.35,14 16,14A3,3 0 0,0 13,17A3,3 0 0,0 16,20A3,3 0 0,0 19,17V8H22V6H17Z"
-						/>
-					</svg>
+					<ListMusic size={16} />
 				</button>
 			</div>
 		</div>
@@ -302,19 +273,3 @@
 	onloadedmetadata={handleLoadedMetadata}
 	class="hidden"
 ></audio>
-
-<style>
-	/* Améliorations pour le player */
-	.btm-nav {
-		position: fixed;
-		bottom: 1rem;
-		left: 1rem;
-		right: 1rem;
-		width: calc(100% - 2rem);
-		height: auto;
-		min-height: 5rem;
-		padding: 0.75rem 0;
-		z-index: 1000;
-		border-radius: 0.7rem;
-	}
-</style>

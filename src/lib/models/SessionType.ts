@@ -1,10 +1,11 @@
 export interface SessionType {
 	id: string;
+	userId: string;
 	expiresAt: Date;
-	token: string;
 	createdAt: Date;
 	updatedAt: Date;
-	ipAddress?: string; // to remove, no logger on this app (i write this just to try better auth)
-	userAgent?: string;
-	userId: string;
+	token: string;
+	ipAddress?: string | null | undefined; // to remove no ip tracking fck this (betterAuth)
+	userAgent?: string | null | undefined;
 }
+

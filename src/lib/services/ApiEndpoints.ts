@@ -1,10 +1,11 @@
+export const MONOCHROME_API = 'https://api.monochrome.tf';
 
-export const API_URL: string = 'https://dab.yeet.su/api'; // keep this in .env?
+export const ClientRouter = {
+	auth: '/auth',
+	logout: '/auth/logout',
+	profile: '/profile',
+};
 
-const url = (path: string) => `${API_URL}${path}`;
+export const RandomAvatar = 'https://avatar.iran.liara.run/public';
 
-export const ApiEndpoints = {
-    auth: {
-        login: () => url('auth/login'), // example
-    }
-}
+export const AppName = 'Hibiki:0.1.0';

@@ -1,46 +1,38 @@
-import { API_URL } from '$lib/services/ApiEndpoints';
-import type { Track } from '$lib/models/Track';
-import type { SearchResponse } from '$lib/models/Response';
+import {
+	type Track,
+	type TidalTrackRaw,
+	type TidalStreamRaw,
+	mapTidalTrack,
+	decodeManifestUrl,
+} from '$lib/models/Track';
+
+interface MonochromeSearchResponse {
+	data: {
+		items: TidalTrackRaw[];
+		totalNumberOfItems: number;
+		limit: number;
+		offset: number;
+	};
+}
+
+interface ProxyTrackResponse {
+	stream: {
+		data: TidalStreamRaw;
+	} | null;
+}
 
 export async function searchTracks(query: string): Promise<Track[]> {
-	if (!query) return [];
+	if (!query?.trim()) return [];
 
 	try {
-		const response = await fetch(
-			`${API_URL}/search?q=${encodeURIComponent(query)}&type=track&limit=10` // a voir pour refactor
-		);
-		const data: SearchResponse = await response.json();
+		const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+		if (!response.ok) return [];
 
-		return data.tracks.map((item) => ({
-			id: item.id,
-			title: item.title,
-			artist: item.artist,
-			artistId: item.artistId,
-			albumTitle: item.albumTitle,
-			albumCover: item.albumCover,
-			albumId: item.albumId,
-			releaseDate: item.releaseDate,
-			genre: item.genre,
-			duration: item.duration,
-			audioQuality: item.audioQuality,
-			version: item.version,
-			label: item.label,
-			labelId: item.labelId,
-			upc: item.upc,
-			mediaCount: item.mediaCount,
-			parental_warning: item.parental_warning,
-			streamable: item.streamable,
-			purchasable: item.purchasable,
-			previewable: item.previewable,
-			genreId: item.genreId,
-			genreSlug: item.genreSlug,
-			genreColor: item.genreColor,
-			releaseDateStream: item.releaseDateStream,
-			releaseDateDownload: item.releaseDateDownload,
-			maximumChannelCount: item.maximumChannelCount,
-			images: item.images,
-			isrc: item.isrc
-		}));
+		const json = (await response.json()) as MonochromeSearchResponse;
+		const items = json?.data?.items;
+
+		if (!Array.isArray(items)) return [];
+		return items.map(mapTidalTrack);
 	} catch (error) {
 		console.error('Erreur de recherche:', error);
 		return [];
@@ -49,14 +41,18 @@ export async function searchTracks(query: string): Promise<Track[]> {
 
 export async function getTrackUrl(trackId: number): Promise<string> {
 	try {
-		const response = await fetch(`${API_URL}/stream?trackId=${trackId}&quality=27`); // a refactor (a voir)
-		if (!response.ok) {
-			throw new Error('Erreur lors de la lecture de la piste');
+		const response = await fetch(`/api/track?id=${trackId}`);
+		if (!response.ok) return '';
+
+		const json = (await response.json()) as ProxyTrackResponse;
+		const manifest = json?.stream?.data?.manifest;
+
+		if (manifest) {
+			return decodeManifestUrl(manifest);
 		}
-		const data = await response.json();
-		return data.url;
+		return '';
 	} catch (error) {
-		console.error('Erreur de lecture:', error);
+		console.error('Erreur lecture piste:', error);
 		return '';
 	}
 }
