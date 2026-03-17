@@ -24,3 +24,5 @@ vite.config.ts.timestamp-*
 
 .idea/
 .vscode/
+CLAUDE.md
+DESIGN_GUIDE.md

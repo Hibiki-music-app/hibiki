@@ -1,162 +1,126 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import userIcon from '$lib/assets/user.svg';
 	import favicon from '$lib/assets/favicon.svg';
-    import {ClientRouter, RandomAvatar} from '$lib/services/ApiEndpoints';
-    import type {UserType} from "$lib/models/UserType";
+	import { ClientRouter, RandomAvatar } from '$lib/services/ApiEndpoints';
+	import type { UserType } from '$lib/models/UserType';
+	import { User, LogOut, Settings, Home } from 'lucide-svelte';
 
-    // fetch the current user from layout (that get from locals)
-    let {
-        user = $bindable(),
-        onHomeClick = $bindable(),
-    } : {
-        user: UserType | null,
-        onHomeClick: () => void
-    } = $props();
+	let {
+		user = $bindable(),
+		onHomeClick = $bindable(),
+	}: {
+		user: UserType | null;
+		onHomeClick: () => void;
+	} = $props();
 
-	let currentTheme = $state('auto');
+	let userMenuOpen = $state(false);
 
-	// Référence pour la barre de recherche
-	let searchInput: HTMLInputElement | null = $state(null);
-
-
-	// Gestion du raccourci Ctrl+K pour focus sur la barre de recherche
-	onMount(() => {
-		const handleKeydown = (event: KeyboardEvent) => {
-			if (event.ctrlKey && event.key === 'k') {
-				event.preventDefault();
-				searchInput?.focus();
-			}
-		};
-
-		document.addEventListener('keydown', handleKeydown);
-
-
-	});
-
-
-
-	// Props pour les événements
-    function handleHomeClick() {
-        onHomeClick?.();
+	function handleHomeClick() {
+		onHomeClick?.();
+		userMenuOpen = false;
 	}
 
-	function setTheme(theme: string) {
-		currentTheme = theme;
-		document.documentElement.setAttribute('data-theme', theme);
+	function toggleUserMenu(e: Event) {
+		e.stopPropagation();
+		userMenuOpen = !userMenuOpen;
+	}
+
+	function closeMenu() {
+		userMenuOpen = false;
 	}
 </script>
 
-<header class="navbar fixed top-0 z-5 flex items-center justify-between p-4">
-	<button
-		class="btn border rounded-full bg-base-100 border-base-300 hover:border-base-content/20 hover:shadow-lg transition-all duration-200 ease-in-out"
-		onclick={handleHomeClick}
-		aria-label="Hibiki - Accueil"
-	>
-		<img class="w-8 h-8" src={favicon} alt="Icône Hibiki" />
-		<span class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-			Hibiki
-		</span>
+<svelte:window onclick={closeMenu} />
+
+<header
+	class="glass-strong sticky top-0 z-40 flex items-center justify-between gap-4 border-b border-[rgba(148,163,184,0.1)]"
+	style="padding: 0.75rem clamp(1.2rem, 2.5vw, 2rem);"
+>
+	<!-- Logo / Home -->
+	<button class="btn-glass gap-2" onclick={handleHomeClick} aria-label="Hibiki — Accueil">
+		<img class="w-5 h-5" src={favicon} alt="Hibiki" />
+		<span class="gradient-text font-bold text-base">Hibiki</span>
 	</button>
 
-	<!-- Add search input bound to the searchInput variable -->
+	<!-- User menu -->
 	<div class="relative">
-		<input
-			type="search"
-			placeholder="Rechercher..."
-			class="input input-bordered w-full max-w-xs"
-			bind:this={searchInput}
-		/>
-	</div>
+		<button
+			class="btn-glass gap-2 touch-target"
+			onclick={toggleUserMenu}
+			aria-label="Menu utilisateur"
+			aria-expanded={userMenuOpen}
+		>
+			{#if user?.image}
+				<img
+					src={user.image}
+					alt="Avatar"
+					class="w-6 h-6 rounded-full object-cover"
+					style="box-shadow: 0 0 8px rgba(59,130,246,0.3);"
+				/>
+			{:else}
+				<div
+					class="w-6 h-6 rounded-full flex items-center justify-center"
+					style="background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.4);"
+				>
+					<User size={14} class="text-[#60a5fa]" />
+				</div>
+			{/if}
+			<span class="text-sm hidden sm:inline">{user?.name ?? 'Compte'}</span>
+		</button>
 
-	<div class="dropdown dropdown-end">
-		<button tabindex="0" class="btn btn-ghost btn-circle avatar border border-base-300 hover:border-base-content/20 hover:shadow-lg transition-all duration-200 ease-in-out">
-			<div class="w-10 rounded-full">
+		{#if userMenuOpen}
+			<div
+				class="glass-strong absolute right-0 top-full mt-2 w-52 rounded-[var(--radius-xl)] overflow-hidden"
+				style="box-shadow: 0 20px 50px rgba(2,6,23,0.5), 0 4px 16px rgba(15,23,42,0.3);
+					   animation: slide-up 0.15s ease;"
+				role="menu"
+			>
 				{#if user}
-					<img src={user?.image || RandomAvatar} alt="Avatar de l'utilisateur" />
+					<!-- User info -->
+					<div class="px-4 py-3 border-b border-[rgba(148,163,184,0.1)]">
+						<p class="text-sm font-medium text-[#f8fafc] truncate">{user.name}</p>
+						<p class="text-xs text-[#64748b] truncate">{user.email}</p>
+					</div>
+
+					<div class="p-1">
+						<a
+							href={ClientRouter.profile}
+							class="glass-action rounded-xl w-full text-sm text-[#f8fafc] gap-3"
+							role="menuitem"
+							onclick={closeMenu}
+						>
+							<div class="flex items-center gap-3">
+								<User size={15} class="text-[#94a3b8]" />
+								<span>Profil</span>
+							</div>
+						</a>
+						<a
+							href={ClientRouter.logout}
+							class="glass-action rounded-xl w-full text-sm text-[#f87171] gap-3"
+							role="menuitem"
+							onclick={closeMenu}
+						>
+							<div class="flex items-center gap-3">
+								<LogOut size={15} class="text-[#f87171]" />
+								<span>Déconnexion</span>
+							</div>
+						</a>
+					</div>
 				{:else}
-					<img src={userIcon} alt="Icône utilisateur" />
+					<div class="p-1">
+						<a
+							href={ClientRouter.auth}
+							class="glass-action rounded-xl w-full text-sm text-[#60a5fa] gap-3"
+							role="menuitem"
+							onclick={closeMenu}
+						>
+							<div class="flex items-center gap-3">
+								<User size={15} />
+								<span>Se connecter</span>
+							</div>
+						</a>
+					</div>
 				{/if}
 			</div>
-		</button>
-		<ul class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-			<li>
-				<a href="/profile" class="justify-between">
-					<div class="flex items-center gap-2">
-						<img class="w-6 h-6 rounded-full" src={user?.image || RandomAvatar} alt="Avatar de l'utilisateur" />
-						<span>{user?.name}</span>
-					</div>
-				</a>
-			</li>
-			<li><a href="/">Paramètres</a></li>
-            {#if user}
-			    <li><a href={ClientRouter.logout}>Déconnexion</a></li>
-                {:else}
-                <li><a href={ClientRouter.login}>Connexion</a></li>
-            {/if}
-			<li>
-				<div class="flex items-center justify-between p-2">
-					<span class="text-sm font-medium">Thème</span>
-					<div class="flex items-center gap-1 border border-base-200 rounded">
-						<button 
-							class="btn btn-ghost btn-sm p-2 {currentTheme === 'light' ? 'btn-active' : ''}" 
-							title="Mode clair"
-							aria-label="Mode clair"
-							onclick={() => setTheme('light')}
-						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<circle cx="12" cy="12" r="5"></circle>
-								<path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
-							</svg>
-						</button>
-						<button 
-							class="btn btn-ghost btn-sm p-2 {currentTheme === 'dark' ? 'btn-active' : ''}" 
-							title="Mode sombre"
-							aria-label="Mode sombre"
-							onclick={() => setTheme('dark')}
-						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-							</svg>
-						</button>
-						<button 
-							class="btn btn-ghost btn-sm p-2 {currentTheme === 'auto' ? 'btn-active' : ''}" 
-							title="Mode automatique"
-							aria-label="Mode automatique"
-							onclick={() => setTheme('auto')}
-						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-								<line x1="8" y1="21" x2="16" y2="21"></line>
-								<line x1="12" y1="17" x2="12" y2="21"></line>
-							</svg>
-						</button>
-					</div>
-				</div>
-			</li>
-		</ul>
+		{/if}
 	</div>
 </header>
-
-<style>
-	/* Ajustements pour le header DaisyUI */
-	.navbar {
-		height: 4rem;
-	}
-
-	/* Améliorations pour le gradient text */
-	.bg-clip-text {
-		background-clip: text;
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-	}
-
-	/* Responsive */
-	@media (max-width: 768px) {
-		.navbar {
-			padding: 0 0.75rem;
-		}
-	}
-
-
-</style>

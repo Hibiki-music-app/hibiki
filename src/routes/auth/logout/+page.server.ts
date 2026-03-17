@@ -2,17 +2,11 @@ import { auth } from '$lib/auth';
 import { type Actions, redirect } from '@sveltejs/kit';
 import { ClientRouter } from '$lib/services/ApiEndpoints';
 
-
-
-// actions call dans le form POST
 export const actions: Actions = {
-	default: async ({request}) => {
-		const rHeaders = request.headers;
+	default: async ({ request }) => {
 		await auth.api.signOut({
-			headers: rHeaders
+			headers: request.headers,
 		});
-		//cookies.delete('session', { path: '/'});
-		throw redirect(303, ClientRouter.login)
-	}
-
-}
+		throw redirect(303, ClientRouter.auth);
+	},
+};
