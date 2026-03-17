@@ -4,7 +4,7 @@
 	import { Fingerprint, UserPlus, Loader2 } from 'lucide-svelte';
 
 	let mode: 'signin' | 'register' = $state('signin');
-	let displayName = $state('');
+	let username = $state('');
 	let error = $state('');
 	let loading = $state(false);
 
@@ -26,22 +26,33 @@
 	}
 
 	async function handleRegister() {
-		if (!displayName.trim()) {
-			error = 'Veuillez entrer un nom affiché';
+		if (!username.trim()) {
+			error = "Veuillez entrer un nom d'utilisateur";
 			return;
 		}
 		loading = true;
 		error = '';
 		try {
-			// Créer le compte puis ajouter la passkey
-			const result = await (authClient as any).passkey.addPasskey({
-				name: displayName.trim(),
+			// Email fantôme interne — jamais exposé à l'utilisateur
+			const ghostEmail = `${username.trim().toLowerCase().replace(/\s+/g, '-')}-${crypto.randomUUID().slice(0, 8)}@passkey.local`;
+
+			// 1. Créer le compte avec identifiants internes
+			const signUpResult = await authClient.signUp.email({
+				email: ghostEmail,
+				name: username.trim(),
+				password: crypto.randomUUID(),
 			});
-			if (result?.error) {
-				error = result.error.message ?? "Échec de l'inscription";
-			} else {
-				goto('/profile');
+			if (signUpResult?.error) {
+				error = signUpResult.error.message ?? "Échec de la création du compte";
+				return;
 			}
+			// 2. Enregistrer la passkey sur le compte tout juste créé
+			const passkeyResult = await authClient.passkey.addPasskey({ name: username.trim() });
+			if (passkeyResult?.error) {
+				error = passkeyResult.error.message ?? "Échec de l'enregistrement de la passkey";
+				return;
+			}
+			goto('/profile');
 		} catch (e: unknown) {
 			error = e instanceof Error ? e.message : "Échec de l'inscription";
 		} finally {
@@ -119,18 +130,18 @@
 						</div>
 						<div>
 							<p class="text-[#f8fafc] font-medium">Créer un compte</p>
-							<p class="text-[#94a3b8] text-xs mt-1">Sans mot de passe — juste une passkey</p>
+							<p class="text-[#94a3b8] text-xs mt-1">Sans email, sans mot de passe — juste une passkey</p>
 						</div>
 					</div>
 
 					<div>
-						<label for="displayName" class="block text-xs font-medium text-[#94a3b8] mb-2 uppercase tracking-wider">
-							Nom affiché
+						<label for="username" class="block text-xs font-medium text-[#94a3b8] mb-2 uppercase tracking-wider">
+							Nom d'utilisateur
 						</label>
 						<input
-							id="displayName"
+							id="username"
 							type="text"
-							bind:value={displayName}
+							bind:value={username}
 							placeholder="Votre prénom ou pseudo"
 							class="w-full glass-subtle rounded-lg px-4 py-3 text-sm text-[#f8fafc]
 								   placeholder:text-[#64748b] border border-[rgba(148,163,184,0.15)]
