@@ -1,31 +1,23 @@
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from '../index';
-import { sveltekitCookies } from 'better-auth/svelte-kit';
-import { getRequestEvent } from '$app/server';
-import { user, account, session, verification } from '$lib/db/schema';
+import { betterAuth } from 'better-auth';
+import { prismaAdapter } from 'better-auth/adapters/prisma';
+import { passkey } from 'better-auth/plugins/passkey';
+import { prisma } from '$lib/db/prisma';
 
-// better Auth instance & pluggins
+const BASE_URL = process.env.BETTER_AUTH_URL ?? 'http://localhost:5173';
+
 export const auth = betterAuth({
-	account: {
-		accountLinking: {
-			enabled: true,
-			trustedProviders: ['google'],
-		}
-	},
-	database: drizzleAdapter(db, {
-		provider: "pg",
-		schema: {user, account, session, verification}
+	baseURL: BASE_URL,
+	secret: process.env.BETTER_AUTH_SECRET,
+	database: prismaAdapter(prisma, {
+		provider: 'postgresql',
 	}),
-  emailAndPassword: {
+	emailAndPassword: {
 		enabled: true,
-		autoSignIn: false,
 	},
-	socialProviders: {
-		google: {
-			clientId: process.env.GOOGLE_CLIENT_ID as string,
-			clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-		}
-	},
-	plugins: [sveltekitCookies(getRequestEvent)], // put in last
-	});
+	plugins: [
+		passkey({
+			rpID: new URL(BASE_URL).hostname,
+			rpName: 'Hibiki',
+		}),
+	],
+});

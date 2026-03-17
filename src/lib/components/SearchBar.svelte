@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { Search } from 'lucide-svelte';
 
 	interface SearchBarProps {
 		onSearch?: (query: string) => void;
 		placeholder?: string;
 	}
 
-	let { onSearch, placeholder = 'Rechercher de la musique...' }: SearchBarProps = $props();
+	let { onSearch, placeholder = 'Rechercher de la musique…' }: SearchBarProps = $props();
 
 	let searchInput: HTMLInputElement | null = $state(null);
 	let searchQuery = $state('');
@@ -18,7 +19,6 @@
 				searchInput?.focus();
 			}
 		};
-
 		document.addEventListener('keydown', handleKeydown);
 		return () => document.removeEventListener('keydown', handleKeydown);
 	});
@@ -31,41 +31,22 @@
 	}
 </script>
 
-<div class="search-bar">
-	<form onsubmit={handleSearch}>
-		<label class="input rounded-full w-full">
-			<svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-				<g
-					stroke-linejoin="round"
-					stroke-linecap="round"
-					stroke-width="2.5"
-					fill="none"
-					stroke="currentColor"
-				>
-					<circle cx="11" cy="11" r="8"></circle>
-					<path d="m21 21-4.3-4.3"></path>
-				</g>
-			</svg>
-			<input
-				bind:this={searchInput}
-				bind:value={searchQuery}
-				type="search"
-				class="grow"
-				{placeholder}
-			/>
-			<kbd class="kbd kbd-sm hidden sm:inline-flex">Ctrl</kbd>
-			<kbd class="kbd kbd-sm hidden sm:inline-flex">K</kbd>
-		</label>
-	</form>
-</div>
-
-<style>
-	.search-bar {
-		max-width: 32rem;
-		margin: 0 auto;
-		padding: 1rem;
-		position: sticky;
-		top: 0;
-		z-index: 10;
-	}
-</style>
+<form onsubmit={handleSearch} class="w-full max-w-2xl mx-auto">
+	<div
+		class="glass-medium rounded-full flex items-center px-4 py-3 gap-3 transition-colors duration-200"
+		style="focus-within:border-[rgba(59,130,246,0.5)];"
+	>
+		<Search size={16} class="text-[#94a3b8] shrink-0" />
+		<input
+			bind:this={searchInput}
+			bind:value={searchQuery}
+			type="search"
+			class="bg-transparent border-none outline-none flex-1 text-[#f8fafc] placeholder:text-[#64748b] text-sm min-w-0"
+			{placeholder}
+		/>
+		<div class="hidden sm:flex items-center gap-1 text-xs text-[#64748b] shrink-0">
+			<kbd class="px-1.5 py-0.5 rounded text-[10px] border border-[rgba(148,163,184,0.2)] bg-[rgba(15,23,42,0.4)]">Ctrl</kbd>
+			<kbd class="px-1.5 py-0.5 rounded text-[10px] border border-[rgba(148,163,184,0.2)] bg-[rgba(15,23,42,0.4)]">K</kbd>
+		</div>
+	</div>
+</form>

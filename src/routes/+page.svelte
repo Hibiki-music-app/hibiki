@@ -1,11 +1,11 @@
 <script lang="ts">
 	import * as api from '$lib/components/SearchTracks';
-	import type { Track } from '$lib/components/SearchTracks';
+	import type { Track } from '$lib/models/Track';
 	import { queueStore } from '$lib/stores/playerStore';
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import { getContext } from 'svelte';
+	import { Play, Pause, MoreVertical, ListPlus, ChevronRight, Loader2 } from 'lucide-svelte';
 
-	// Récupérer le contexte du player depuis le layout
 	const playerContext = getContext('player') as {
 		currentTrack: Track | null;
 		isPlaying: boolean;
@@ -13,17 +13,17 @@
 		togglePlayPause?: () => void;
 	};
 
-	// recherche
 	let searchQuery = $state('');
 	let isLoading = $state(false);
 	let searchResults: Track[] = $state([]);
 	let hasSearched = $state(false);
+	let activeMenuTrackId: number | null = $state(null);
 
-	function searchTracks() {
+	function doSearch(query: string) {
+		searchQuery = query;
 		isLoading = true;
 		hasSearched = true;
-		api
-			.searchTracks(searchQuery)
+		api.searchTracks(query)
 			.then((tracks) => {
 				searchResults = tracks;
 				isLoading = false;
@@ -33,223 +33,195 @@
 			});
 	}
 
-	function handleSearchFromBar(query: string) {
-		searchQuery = query;
-		searchTracks();
-	}
-
 	async function playTrack(track: Track) {
 		if (playerContext.playTrack) {
 			await playerContext.playTrack(track);
 		}
 	}
 
-	// Nouvelles fonctions pour la queue
-	function addToQueue(track: Track) {
-		queueStore.addTrack(track);
-		// Afficher une notification ou toast ici si souhaité
-	}
-
-	function playNext(track: Track) {
-		queueStore.playNext(track);
-		// Afficher une notification ou toast ici si souhaité
-	}
-
-	// État pour gérer les menus contextuels
-	let activeMenuTrackId: number | null = $state(null);
-
-	function toggleMenu(trackId: number) {
+	function toggleMenu(trackId: number, e: Event) {
+		e.stopPropagation();
 		activeMenuTrackId = activeMenuTrackId === trackId ? null : trackId;
 	}
 
 	function closeMenu() {
 		activeMenuTrackId = null;
 	}
+
+	const quickSearches = [
+		{ label: 'Pop', query: 'pop' },
+		{ label: 'Rock', query: 'rock' },
+		{ label: 'Jazz', query: 'jazz' },
+		{ label: 'Electronic', query: 'electronic' },
+		{ label: 'Classical', query: 'classical' },
+	];
 </script>
 
-<div class="min-h-screen bg-base-200" onclick={closeMenu} onkeydown={(e) => e.key === 'Escape' && closeMenu()} role="button" tabindex="0">
-	<!-- Hero Section -->
-	<div class="hero min-h-[25vh] flex flex-col justify-end pb-8">
-		<h1 class="text-4xl font-bold">On écoute quoi ?</h1>
+<div
+	onclick={closeMenu}
+	onkeydown={(e) => e.key === 'Escape' && closeMenu()}
+	role="presentation"
+>
+	<!-- Hero -->
+	<div class="mb-8" style="animation: fade-in 0.3s ease;">
+		<h1 class="font-bold mb-2"
+			style="font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1.1;">
+			On écoute quoi ?
+		</h1>
+		<p class="text-[#94a3b8] text-sm">Recherchez parmi des millions de titres HiFi</p>
 	</div>
 
-	<!-- Barre de recherche -->
-	<SearchBar onSearch={handleSearchFromBar} />
+	<!-- Search bar -->
+	<div class="mb-6">
+		<SearchBar onSearch={doSearch} />
+	</div>
 
-	{#if !hasSearched && !isLoading}
-		<div class="text-center">
-			<div class="flex flex-wrap gap-4 justify-center">
+	<!-- Quick searches -->
+	{#if !hasSearched}
+		<div class="flex flex-wrap gap-2 mb-10" style="animation: fade-in 0.4s ease 0.1s both;">
+			{#each quickSearches as { label, query }}
 				<button
-					class="badge badge-primary badge-lg cursor-pointer hover:badge-primary-focus"
-					onclick={() => handleSearchFromBar('pop music')}
+					class="btn-glass text-xs"
+					onclick={() => doSearch(query)}
 				>
-					🎤 Musique Pop
+					{label}
 				</button>
-				<button
-					class="badge badge-secondary badge-lg cursor-pointer hover:badge-secondary-focus"
-					onclick={() => handleSearchFromBar('rock classics')}
-				>
-					🎸 Rock Classique
-				</button>
-				<button
-					class="badge badge-accent badge-lg cursor-pointer hover:badge-accent-focus"
-					onclick={() => handleSearchFromBar('jazz')}
-				>
-					🎷 Jazz
-				</button>
+			{/each}
+		</div>
+	{/if}
+
+	<!-- Loading state -->
+	{#if isLoading}
+		<div class="flex flex-col items-center justify-center py-20 gap-4" style="animation: fade-in 0.2s ease;">
+			<Loader2 size={32} class="text-[#3b82f6] animate-spin" />
+			<p class="text-[#94a3b8] text-sm">Recherche en cours…</p>
+		</div>
+	{/if}
+
+	<!-- Results -->
+	{#if !isLoading && searchResults.length > 0}
+		<div style="animation: slide-up 0.25s ease;">
+			<p class="text-xs text-[#64748b] uppercase tracking-wider font-semibold mb-4">
+				{searchResults.length} résultat{searchResults.length > 1 ? 's' : ''} pour « {searchQuery} »
+			</p>
+
+			<div class="space-y-1">
+				{#each searchResults as track, i}
+					<div
+						class="glass-action rounded-xl group relative"
+						style="animation: fade-in 0.2s ease {i * 0.03}s both;"
+					>
+						<!-- Cover -->
+						<div class="flex items-center gap-3 flex-1 min-w-0">
+							<div class="w-11 h-11 rounded-lg shrink-0 overflow-hidden">
+								{#if track.albumCover}
+									<img src={track.albumCover} alt={track.albumTitle} class="w-full h-full object-cover" />
+								{:else}
+									<div class="w-full h-full glass-subtle flex items-center justify-center text-lg">🎵</div>
+								{/if}
+							</div>
+
+							<!-- Info -->
+							<div class="flex-1 min-w-0">
+								<p class="text-sm font-medium text-[#f8fafc] truncate
+									{playerContext.currentTrack?.id === track.id ? 'text-[#93c5fd]' : ''}">
+									{track.title}
+								</p>
+								<p class="text-xs text-[#94a3b8] truncate">{track.artist}</p>
+							</div>
+						</div>
+
+						<!-- Actions -->
+						<div class="flex items-center gap-1 shrink-0">
+							<!-- Duration -->
+							{#if track.duration}
+								<span class="text-xs text-[#64748b] tabular-nums hidden sm:inline mr-2">
+									{Math.floor(track.duration / 60)}:{String(Math.floor(track.duration % 60)).padStart(2, '0')}
+								</span>
+							{/if}
+
+							<!-- Play -->
+							<button
+								onclick={() => playTrack(track)}
+								class="btn-glass touch-target"
+								style="padding: 0.5rem; {playerContext.currentTrack?.id === track.id && playerContext.isPlaying ? 'color: #60a5fa; border-color: rgba(59,130,246,0.4);' : ''}"
+								aria-label="Jouer"
+							>
+								{#if playerContext.currentTrack?.id === track.id && playerContext.isPlaying}
+									<Pause size={16} />
+								{:else}
+									<Play size={16} />
+								{/if}
+							</button>
+
+							<!-- Options menu -->
+							<div class="relative">
+								<button
+									onclick={(e) => toggleMenu(track.id, e)}
+									class="btn-glass touch-target"
+									style="padding: 0.5rem;"
+									aria-label="Plus d'options"
+								>
+									<MoreVertical size={16} />
+								</button>
+
+								{#if activeMenuTrackId === track.id}
+									<div
+										class="glass-strong absolute right-0 top-full mt-1 w-52 rounded-xl z-10 overflow-hidden"
+										style="box-shadow: 0 20px 40px rgba(2,6,23,0.4); animation: slide-up 0.15s ease;"
+										role="menu"
+									>
+										<div class="p-1">
+											<button
+												class="glass-action rounded-lg w-full text-sm text-[#f8fafc] gap-2 justify-start"
+												onclick={() => { playTrack(track); closeMenu(); }}
+												role="menuitem"
+											>
+												<Play size={14} class="text-[#60a5fa]" />
+												Jouer maintenant
+											</button>
+											<button
+												class="glass-action rounded-lg w-full text-sm text-[#f8fafc] gap-2 justify-start"
+												onclick={() => { queueStore.playNext(track); closeMenu(); }}
+												role="menuitem"
+											>
+												<ChevronRight size={14} class="text-[#94a3b8]" />
+												Jouer ensuite
+											</button>
+											<button
+												class="glass-action rounded-lg w-full text-sm text-[#f8fafc] gap-2 justify-start"
+												onclick={() => { queueStore.addTrack(track); closeMenu(); }}
+												role="menuitem"
+											>
+												<ListPlus size={14} class="text-[#94a3b8]" />
+												Ajouter à la file
+											</button>
+										</div>
+									</div>
+								{/if}
+							</div>
+						</div>
+					</div>
+				{/each}
 			</div>
 		</div>
 	{/if}
 
-	<!-- Contenu principal -->
-	<div class="container mx-auto px-4 py-8 min-h-[50vh] pb-24">
-		<!-- État de chargement -->
-		{#if isLoading}
-			<div class="flex flex-col items-center justify-center py-16 text-center">
-				<span class="loading loading-spinner loading-lg text-primary mb-4"></span>
-				<p class="text-lg text-base-content/70">Recherche en cours...</p>
-			</div>
-		{/if}
-
-		<!-- Message d'accueil si aucune recherche -->
-
-		<!-- Résultats de recherche -->
-		{#if searchResults.length > 0}
-			<div class="mb-8">
-				<ul class="list bg-base-100 rounded-box shadow-md">
-					<li class="p-4 pb-2 text-xs opacity-60 tracking-wide">
-						{searchResults.length} résultat{searchResults.length > 1 ? 's' : ''} pour "{searchQuery}"
-					</li>
-					{#each searchResults as track}
-						<li class="list-row relative">
-							<div>
-								{#if track.albumCover}
-									<img class="size-10 rounded-box" src={track.albumCover} alt={track.albumTitle} />
-								{:else}
-									<div
-										class="size-10 rounded-box bg-neutral text-neutral-content flex items-center justify-center"
-									>
-										<span class="text-xs">🎵</span>
-									</div>
-								{/if}
-							</div>
-							<div class="flex-1">
-								<div>{track.title}</div>
-								<div class="text-xs uppercase font-semibold opacity-60">{track.artist}</div>
-							</div>
-
-							<!-- Actions -->
-							<div class="flex items-center gap-1">
-								<!-- Bouton play principal -->
-								<button
-									onclick={() => playTrack(track)}
-									class="btn btn-square btn-ghost"
-									class:text-success={playerContext.currentTrack?.id === track.id &&
-										playerContext.isPlaying}
-									disabled={isLoading}
-									aria-label="Jouer"
-								>
-									{#if playerContext.currentTrack?.id === track.id && playerContext.isPlaying}
-										<svg
-											class="size-[1.2em]"
-											xmlns="http://www.w3.org/2000/svg"
-											viewBox="0 0 24 24"
-											fill="currentColor"
-										>
-											<rect x="6" y="4" width="4" height="16" />
-											<rect x="14" y="4" width="4" height="16" />
-										</svg>
-									{:else}
-										<svg class="size-[1.2em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-											><g
-												stroke-linejoin="round"
-												stroke-linecap="round"
-												stroke-width="2"
-												fill="none"
-												stroke="currentColor"><path d="M6 3L20 12 6 21 6 3z"></path></g
-											></svg
-										>
-									{/if}
-								</button>
-
-								<!-- Bouton menu options -->
-								<div class="dropdown dropdown-end">
-									<button
-										onclick={() => toggleMenu(track.id)}
-										class="btn btn-square btn-ghost btn-sm"
-										aria-label="Plus d'options"
-									>
-										<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-											<path d="M12,16A2,2 0 0,1 14,18A2,2 0 0,1 12,20A2,2 0 0,1 10,18A2,2 0 0,1 12,16M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4Z"/>
-										</svg>
-									</button>
-
-									{#if activeMenuTrackId === track.id}
-										<ul class="dropdown-content menu bg-base-100 rounded-box z-10 w-52 p-2 shadow-lg">
-											<li>
-												<button onclick={() => { playTrack(track); closeMenu(); }} class="flex items-center gap-2">
-													<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-														<polygon points="5,3 19,12 5,21" />
-													</svg>
-													Jouer maintenant
-												</button>
-											</li>
-											<li>
-												<button onclick={() => { playNext(track); closeMenu(); }} class="flex items-center gap-2">
-													<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-														<path d="M8,5V19L19,12M6,5V19L17,12"/>
-													</svg>
-													Jouer ensuite
-												</button>
-											</li>
-											<li>
-												<button onclick={() => { addToQueue(track); closeMenu(); }} class="flex items-center gap-2">
-													<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-														<path d="M15,6H3V8H15V6M15,10H3V12H15V10M3,16H11V14H3V16M17,6V14.18C16.69,14.07 16.35,14 16,14A3,3 0 0,0 13,17A3,3 0 0,0 16,20A3,3 0 0,0 19,17V8H22V6H17Z"/>
-													</svg>
-													Ajouter à la file d'attente
-												</button>
-											</li>
-										</ul>
-									{/if}
-								</div>
-							</div>
-						</li>
-					{/each}
-				</ul>
-			</div>
-		{:else if hasSearched && !isLoading}
-			<div class="text-center py-16">
-				<div class="text-6xl mb-6 opacity-50">🔍</div>
-				<h3 class="text-2xl font-bold text-base-content mb-4">Aucun résultat trouvé</h3>
-				<p class="text-base-content/70">
-					Essayez avec d'autres mots-clés ou vérifiez l'orthographe.
-				</p>
-				<div class="mt-8">
-					<button class="btn btn-outline btn-primary" onclick={() => handleSearchFromBar('')}>
-						Nouvelle recherche
-					</button>
-				</div>
-			</div>
-		{/if}
-	</div>
+	<!-- No results -->
+	{#if hasSearched && !isLoading && searchResults.length === 0}
+		<div class="text-center py-20" style="animation: fade-in 0.25s ease;">
+			<p class="text-4xl mb-4">🔍</p>
+			<h3 class="text-lg font-semibold text-[#f8fafc] mb-2">Aucun résultat</h3>
+			<p class="text-sm text-[#94a3b8]">Essayez d'autres mots-clés</p>
+			<button
+				class="btn-glass mt-6"
+				onclick={() => { hasSearched = false; searchResults = []; }}
+			>
+				Nouvelle recherche
+			</button>
+		</div>
+	{/if}
 </div>
 
-<style>
-	/* Ajustements minimaux pour l'animation de rebond */
-	@keyframes bounce {
-		0%,
-		20%,
-		50%,
-		80%,
-		100% {
-			transform: translateY(0);
-		}
-		40% {
-			transform: translateY(-10px);
-		}
-		60% {
-			transform: translateY(-5px);
-		}
-	}
-</style>
+<!-- Bottom padding for player bar -->
+<div class="h-28"></div>
