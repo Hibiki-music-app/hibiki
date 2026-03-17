@@ -1,9 +1,10 @@
 import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 import { MONOCHROME_API } from '$lib/services/ApiEndpoints';
 
-export async function GET({ url }) {
+export const GET: RequestHandler = async ({ url }) => {
 	const id = url.searchParams.get('id');
-	const quality = url.searchParams.get('quality') ?? 'HI_RES_LOSSLESS';
+	const quality = url.searchParams.get('quality') ?? 'LOSSLESS';
 
 	if (!id) {
 		return json({ error: 'Missing id' }, { status: 400 });
@@ -16,8 +17,8 @@ export async function GET({ url }) {
 		fetch(`${MONOCHROME_API}/track/?id=${id}&quality=${quality}`, { headers }),
 	]);
 
-	const info = infoRes.ok ? await infoRes.json() : null;
-	const stream = streamRes.ok ? await streamRes.json() : null;
+	const info: unknown = infoRes.ok ? await infoRes.json() : null;
+	const stream: unknown = streamRes.ok ? await streamRes.json() : null;
 
 	return json({ info, stream });
-}
+};

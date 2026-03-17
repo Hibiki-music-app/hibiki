@@ -183,22 +183,20 @@
 			</div>
 
 			<!-- Playback controls -->
-			<div class="flex items-center gap-1 shrink-0">
+			<div class="flex items-center gap-2 shrink-0">
 				<button
 					onclick={handlePrevious}
 					disabled={!$hasPrevious}
-					class="btn-glass p-2 touch-target"
+					class="btn-glass btn-icon touch-target"
 					aria-label="Piste précédente"
-					style="padding: 0.5rem;"
 				>
 					<SkipBack size={18} class={$hasPrevious ? 'text-[#f8fafc]' : 'text-[#475569]'} />
 				</button>
 
 				<button
 					onclick={handleTogglePlayPause}
-					class="btn-glass-accent touch-target btn-glass"
-					aria-label="{isPlaying ? 'Pause' : 'Lecture'}"
-					style="padding: 0.6rem; border-radius: 9999px;"
+					class="btn-glass btn-glass-accent btn-icon touch-target"
+					aria-label={isPlaying ? 'Pause' : 'Lecture'}
 				>
 					{#if isPlaying}
 						<Pause size={20} />
@@ -210,22 +208,20 @@
 				<button
 					onclick={handleNext}
 					disabled={!$hasNext}
-					class="btn-glass p-2 touch-target"
+					class="btn-glass btn-icon touch-target"
 					aria-label="Piste suivante"
-					style="padding: 0.5rem;"
 				>
 					<SkipForward size={18} class={$hasNext ? 'text-[#f8fafc]' : 'text-[#475569]'} />
 				</button>
 			</div>
 
 			<!-- Volume + Queue -->
-			<div class="flex items-center gap-1 shrink-0">
+			<div class="flex items-center gap-2 shrink-0">
 				<!-- Volume -->
 				<div class="relative">
 					<button
 						onclick={() => (showVolumeSlider = !showVolumeSlider)}
-						class="btn-glass touch-target"
-						style="padding: 0.5rem;"
+						class="btn-glass btn-icon touch-target"
 						aria-label="Volume"
 					>
 						{#if volume === 0}
@@ -258,8 +254,7 @@
 				<!-- Queue toggle -->
 				<button
 					onclick={toggleQueue}
-					class="btn-glass touch-target"
-					style="padding: 0.5rem; {showQueue ? 'color: #60a5fa; border-color: rgba(59,130,246,0.4);' : ''}"
+					class="btn-glass btn-icon touch-target {showQueue ? 'btn-glass-accent' : ''}"
 					aria-label="File d'attente"
 				>
 					<ListMusic size={16} />

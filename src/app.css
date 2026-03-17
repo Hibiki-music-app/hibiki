@@ -212,8 +212,9 @@ button { cursor: pointer; font-family: inherit; }
 .btn-glass {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  padding: 0.55rem 0.95rem 0.55rem 0.85rem;
+  padding: 0.6rem 1.1rem;
   border-radius: var(--radius-full);
   border: 1px solid rgba(148, 163, 184, 0.2);
   background: transparent;
@@ -228,6 +229,7 @@ button { cursor: pointer; font-family: inherit; }
     box-shadow var(--transition-base),
     border-color var(--transition-fast);
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .btn-glass:hover:not(:disabled) {
@@ -254,6 +256,11 @@ button { cursor: pointer; font-family: inherit; }
 .btn-glass-accent:hover:not(:disabled) {
   background: rgba(59, 130, 246, 0.25);
   box-shadow: var(--shadow-glow-md);
+}
+
+/* Bouton icône seul (sans texte) : padding uniforme */
+.btn-icon {
+  padding: 0.6rem !important;
 }
 
 .card-interactive {
@@ -295,7 +302,7 @@ button { cursor: pointer; font-family: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.7rem 0.9rem;
+  padding: 0.75rem 1rem;
   border-radius: 14px;
   border: 1px solid transparent;
   transition: all var(--transition-base);

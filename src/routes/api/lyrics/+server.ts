@@ -1,7 +1,8 @@
 import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 import { MONOCHROME_API } from '$lib/services/ApiEndpoints';
 
-export async function GET({ url }) {
+export const GET: RequestHandler = async ({ url }) => {
 	const id = url.searchParams.get('id');
 	if (!id) {
 		return json({ error: 'Missing id' }, { status: 400 });
@@ -15,6 +16,6 @@ export async function GET({ url }) {
 		return json({ error: 'Not found' }, { status: 404 });
 	}
 
-	const data = await response.json();
+	const data: unknown = await response.json();
 	return json(data);
-}
+};

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { queueStore, currentTrack } from '$lib/stores/playerStore';
 	import type { QueueItem } from '$lib/stores/playerStore';
+	import type { Track } from '$lib/models/Track';
 	import { Shuffle, Repeat, Trash2, X, Play, Pause, GripVertical, ListMusic } from 'lucide-svelte';
 
 	let {
@@ -8,7 +9,7 @@
 		playTrack,
 	}: {
 		show: boolean;
-		playTrack?: (track: any) => Promise<void>;
+		playTrack?: (track: Track) => Promise<void>;
 	} = $props();
 
 	let draggedIndex: number | null = $state(null);
@@ -86,11 +87,10 @@
 				<span class="text-[#64748b] font-normal">({$queueStore.items.length})</span>
 			</h2>
 
-			<div class="flex items-center gap-1">
+			<div class="flex items-center gap-2">
 				<button
 					onclick={() => queueStore.toggleShuffle()}
-					class="btn-glass touch-target"
-					style="padding: 0.4rem; {$queueStore.isShuffling ? 'color: #60a5fa; border-color: rgba(59,130,246,0.4);' : ''}"
+					class="btn-glass btn-icon touch-target {$queueStore.isShuffling ? 'btn-glass-accent' : ''}"
 					aria-label="Lecture aléatoire"
 					title="Aléatoire"
 				>
@@ -99,8 +99,7 @@
 
 				<button
 					onclick={() => queueStore.toggleLoop()}
-					class="btn-glass touch-target"
-					style="padding: 0.4rem; {$queueStore.isLooping ? 'color: #60a5fa; border-color: rgba(59,130,246,0.4);' : ''}"
+					class="btn-glass btn-icon touch-target {$queueStore.isLooping ? 'btn-glass-accent' : ''}"
 					aria-label="Répéter"
 					title="Répéter"
 				>
@@ -110,8 +109,8 @@
 				{#if $queueStore.items.length > 0}
 					<button
 						onclick={() => queueStore.clear()}
-						class="btn-glass touch-target"
-						style="padding: 0.4rem; color: #f87171; border-color: rgba(239,68,68,0.3);"
+						class="btn-glass btn-icon touch-target"
+						style="color: #f87171; border-color: rgba(239,68,68,0.3);"
 						aria-label="Vider"
 						title="Vider la file"
 					>
@@ -121,8 +120,7 @@
 
 				<button
 					onclick={close}
-					class="btn-glass touch-target ml-1"
-					style="padding: 0.4rem;"
+					class="btn-glass btn-icon touch-target"
 					aria-label="Fermer"
 				>
 					<X size={15} />
@@ -192,29 +190,28 @@
 						</span>
 
 						<!-- Actions (visible on hover) -->
-						<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+						<div class="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
 							<button
 								onclick={() => playFromQueue(item, index)}
-								class="btn-glass touch-target"
-								style="padding: 0.3rem;"
+								class="btn-glass btn-icon touch-target"
 								aria-label="Jouer"
 							>
 								{#if index === $queueStore.currentIndex}
-									<Pause size={12} />
+									<Pause size={13} />
 								{:else}
-									<Play size={12} />
+									<Play size={13} />
 								{/if}
 							</button>
 							<button
 								onclick={() => queueStore.removeTrack(item.id)}
-								class="btn-glass touch-target"
-								style="padding: 0.3rem; color: #f87171;"
+								class="btn-glass btn-icon touch-target"
+								style="color: #f87171;"
 								aria-label="Retirer"
 							>
-								<X size={12} />
+								<X size={13} />
 							</button>
-							<div class="cursor-move text-[#475569] hover:text-[#94a3b8] p-1">
-								<GripVertical size={12} />
+							<div class="cursor-move text-[#475569] hover:text-[#94a3b8] p-1.5">
+								<GripVertical size={13} />
 							</div>
 						</div>
 					</div>
